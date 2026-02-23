@@ -1,0 +1,973 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>RITUAL — Winston Draft</title>
+<style>
+/* ── RESET & BASE ── */
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+html, body {
+  height: 100%; overflow: hidden;
+  background: #0a0a12;
+  color: #c8c0e0;
+  font-family: 'Trebuchet MS', sans-serif;
+  font-size: 15px;
+}
+
+/* ── LAYOUT ── */
+#app {
+  display: flex; flex-direction: column;
+  height: 100%; height: 100dvh;
+  max-width: 680px; margin: 0 auto;
+  overflow: hidden;
+}
+
+/* ── TOP BAR ── */
+#top-bar {
+  flex: 0 0 44px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 12px;
+  background: #0e0e1c;
+  border-bottom: 1px solid #252545;
+}
+#btn-restart {
+  background: none; border: none; color: #5a5278; cursor: pointer;
+  font-size: 18px; padding: 4px 6px; border-radius: 4px;
+  transition: color 0.15s;
+}
+#btn-restart:hover { color: #c8922a; }
+#top-title {
+  font-family: 'Arial Black', sans-serif; font-size: 11px;
+  letter-spacing: 1.5px; color: #c8922a; flex: 1;
+}
+.player-count {
+  font-size: 11px; color: #5a5278;
+}
+.player-count span { color: #c0b8e0; }
+
+/* ── PILE STRIP ── */
+#pile-strip {
+  flex: 0 0 auto;
+  display: flex; align-items: center; gap: 8px;
+  padding: 10px 12px;
+  background: #0a0a12;
+  border-bottom: 1px solid #252545;
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+#pile-strip::-webkit-scrollbar { display: none; }
+
+.pile-slot {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+}
+.pile-label {
+  font-size: 9px; letter-spacing: 1px; color: #5a5278; text-transform: uppercase;
+}
+.pile-card-wrap {
+  position: relative; cursor: pointer;
+}
+.pile-badge {
+  position: absolute; top: -6px; right: -6px;
+  background: #c8922a; color: #000;
+  font-family: 'Arial Black', sans-serif; font-size: 9px;
+  width: 18px; height: 18px; border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 40; font-weight: 900;
+}
+
+/* Draw stack slot */
+#draw-stack-slot {
+  flex-shrink: 0;
+  display: flex; flex-direction: column; align-items: center; gap: 4px;
+  margin-left: auto;
+}
+#draw-count {
+  font-family: 'Arial Black', sans-serif; font-size: 14px; color: #c8922a;
+}
+#draw-label {
+  font-size: 9px; letter-spacing: 1px; color: #5a5278; text-transform: uppercase;
+}
+
+/* Card back placeholder */
+.card-back {
+  background: #13132a;
+  border: 1px solid #252545;
+  border-radius: 6px;
+  display: flex; align-items: center; justify-content: center;
+  color: #252545; font-size: 20px;
+}
+
+/* ── MAIN AREA ── */
+#main-area {
+  flex: 1;
+  display: flex;
+  overflow: hidden;
+}
+
+/* Card list panel (left) */
+#list-panel {
+  flex: 0 0 42%;
+  border-right: 1px solid #252545;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
+}
+#list-panel::-webkit-scrollbar { width: 3px; }
+#list-panel::-webkit-scrollbar-thumb { background: #252545; border-radius: 2px; }
+
+.list-header {
+  padding: 8px 10px 4px;
+  font-size: 9px; letter-spacing: 1px; color: #5a5278;
+  text-transform: uppercase; border-bottom: 1px solid #1a1a30;
+  position: sticky; top: 0; background: #0a0a12; z-index: 5;
+  display: flex; justify-content: space-between;
+}
+.list-header span { color: #c8922a; }
+
+.list-row {
+  display: flex; align-items: center; gap: 8px;
+  padding: 5px 10px;
+  cursor: pointer;
+  border-bottom: 1px solid #0f0f20;
+  transition: background 0.1s;
+}
+.list-row:hover { background: #111128; }
+.list-row.active { background: #1a1435; }
+
+.list-faction-dot {
+  width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0;
+}
+.list-name {
+  font-size: 11px; color: #c0b8e0; flex: 1;
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.list-cost {
+  font-family: 'Arial Black', sans-serif; font-size: 10px;
+  color: #5a5278; flex-shrink: 0;
+}
+.list-type-badge {
+  font-size: 8px; letter-spacing: 0.5px; padding: 1px 4px;
+  border-radius: 2px; flex-shrink: 0; color: #5a5278;
+  border: 1px solid #252545;
+}
+
+/* ── DETAIL PANEL ── */
+#detail-panel {
+  flex: 1;
+  display: flex; flex-direction: column; align-items: center;
+  justify-content: center;
+  padding: 12px;
+  overflow: hidden;
+}
+#detail-card-wrap {
+  flex: 1; display: flex; align-items: center; justify-content: center;
+  width: 100%; overflow: hidden;
+}
+#detail-card-wrap .ritual-card {
+  --card-w: clamp(140px, 45vw, 240px);
+}
+
+/* ── PINNED BUTTONS ── */
+#pin-btns {
+  flex: 0 0 auto;
+  display: flex; gap: 10px;
+  padding: 10px 12px;
+  border-top: 1px solid #252545;
+  background: #0e0e1c;
+}
+.pin-btn {
+  flex: 1;
+  font-family: 'Arial Black', sans-serif; font-size: 11px; letter-spacing: 1px;
+  padding: 12px 8px; border-radius: 4px; cursor: pointer;
+  border: none; transition: all 0.12s;
+}
+.pin-btn:disabled { opacity: 0.25; cursor: not-allowed; }
+#btn-pass {
+  background: #1a1a2e; color: #5a5278; border: 1px solid #252545;
+}
+#btn-pass:not(:disabled):hover { background: #252545; color: #c0b8e0; }
+#btn-draft {
+  background: #c8922a; color: #000;
+}
+#btn-draft:not(:disabled):hover { background: #e8b84a; }
+
+/* ── TURN INDICATOR ── */
+#turn-indicator {
+  padding: 6px 12px;
+  background: #0d0d1f;
+  border-bottom: 1px solid #252545;
+  font-size: 10px; letter-spacing: 0.5px; color: #5a5278;
+  text-align: center;
+}
+#turn-indicator em {
+  color: #c8922a; font-style: normal; font-family: 'Arial Black', sans-serif;
+}
+
+/* ── DRAFT COMPLETE SCREEN ── */
+#complete-screen {
+  display: none;
+  position: fixed; inset: 0;
+  background: #080810;
+  z-index: 100;
+  flex-direction: column;
+  align-items: center;
+  padding: 24px 16px;
+  overflow-y: auto;
+}
+#complete-screen.open { display: flex; }
+#complete-title {
+  font-family: 'Arial Black', sans-serif; font-size: 18px;
+  color: #c8922a; letter-spacing: 2px;
+  margin-bottom: 4px;
+}
+#complete-sub {
+  font-size: 11px; color: #5a5278; margin-bottom: 20px;
+}
+.copy-section {
+  width: 100%; max-width: 560px; margin-bottom: 16px;
+}
+.copy-section-title {
+  font-size: 10px; letter-spacing: 1px; color: #5a5278;
+  text-transform: uppercase; margin-bottom: 6px;
+}
+.copy-output {
+  background: #0e0e1c; border: 1px solid #252545; border-radius: 4px;
+  padding: 10px 12px; font-size: 11px; color: #c0b8e0;
+  font-family: monospace; white-space: pre-wrap; word-break: break-word;
+  max-height: 200px; overflow-y: auto;
+  margin-bottom: 8px;
+}
+.btn-copy {
+  font-family: 'Arial Black', sans-serif; font-size: 10px; letter-spacing: 1px;
+  padding: 8px 16px; border-radius: 3px; cursor: pointer;
+  background: transparent; border: 1px solid #c8922a; color: #c8922a;
+  transition: all 0.12s;
+}
+.btn-copy:hover { background: rgba(200,146,42,0.1); }
+.btn-copy.copied { border-color: #307030; color: #307030; }
+#btn-restart-complete {
+  margin-top: 8px;
+  font-family: 'Arial Black', sans-serif; font-size: 10px; letter-spacing: 1px;
+  padding: 10px 24px; border-radius: 3px; cursor: pointer;
+  background: #13132a; border: 1px solid #252545; color: #5a5278;
+  transition: all 0.12s;
+}
+#btn-restart-complete:hover { color: #c0b8e0; border-color: #5a5278; }
+
+/* ══════════════════════════════════════════════════════════
+   RITUAL CARD COMPONENT — style guide v1
+   Single --card-w variable scales everything.
+   ══════════════════════════════════════════════════════════ */
+.ritual-card {
+  --card-w: 280px;
+  --card-h: calc(var(--card-w) * 1.4);
+  --u: calc(var(--card-w) / 100);
+
+  width: var(--card-w);
+  height: var(--card-h);
+  position: relative;
+  border-radius: calc(var(--u) * 3.5);
+  overflow: hidden;
+  background: #e8e4df;
+  box-shadow: 0 0 0 calc(var(--u) * 0.9) #5E5C5D, 0 8px 28px rgba(0,0,0,0.7);
+  flex-shrink: 0;
+  user-select: none;
+}
+.rc-art {
+  position: absolute; inset: 0;
+  width: 100%; height: 100%;
+  object-fit: cover; object-position: center center;
+}
+.rc-art-placeholder {
+  position: absolute; inset: 0;
+  display: flex; align-items: center; justify-content: center;
+  background: #2a2a3a;
+}
+.rc-art-placeholder img {
+  width: 50%; height: 50%; object-fit: contain; opacity: 0.2;
+}
+.rc-cost {
+  position: absolute;
+  top: calc(var(--u) * 1.5); left: calc(var(--u) * 2);
+  width: calc(var(--u) * 14); height: calc(var(--u) * 14);
+  border-radius: 50%;
+  background: #E9E9E9; border: calc(var(--u) * 0.9) solid #5E5C5D;
+  display: flex; align-items: center; justify-content: center;
+  z-index: 30;
+}
+.rc-cost-val {
+  font-family: 'Arial Black', Arial, sans-serif; font-weight: 900;
+  font-size: calc(var(--u) * 7); color: #5F5C5D; line-height: 1;
+}
+.rc-cost.is-sanity { }
+.rc-cost.is-sanity .rc-cost-val { font-size: calc(var(--u) * 7.5); color: #8A1CD8; }
+.rc-faction-icon {
+  position: absolute;
+  top: calc(var(--u) * 25); left: calc(var(--u) * 2.5);
+  width: calc(var(--u) * 17); height: calc(var(--u) * 17);
+  border: calc(var(--u) * 0.8) solid #5E5C5D;
+  border-radius: calc(var(--u) * 1.5); overflow: hidden; z-index: 20;
+}
+.rc-faction-icon img { width: 100%; height: 100%; object-fit: cover; }
+.rc-overlay {
+  position: absolute; inset: 0;
+  display: flex; flex-direction: column; z-index: 10;
+}
+.rc-name-bar {
+  background: rgba(233,233,233,0.84);
+  border-bottom: calc(var(--u) * 0.7) solid #5E5C5D;
+  display: flex; align-items: center;
+  padding-left: calc(var(--u) * 17); padding-right: calc(var(--u) * 3);
+  height: calc(var(--u) * 14); flex-shrink: 0;
+}
+.rc-name {
+  font-family: 'Arial Black', Arial, sans-serif; font-weight: 900;
+  font-size: calc(var(--u) * 6); color: #5F5C5D;
+  line-height: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+}
+.rc-type-bar {
+  align-self: flex-end; width: calc(var(--u) * 33.33);
+  background: rgba(233,233,233,0.84);
+  border-bottom: calc(var(--u) * 0.7) solid #5E5C5D;
+  border-left: calc(var(--u) * 0.7) solid #5E5C5D;
+  display: flex; align-items: center; justify-content: flex-end;
+  gap: calc(var(--u) * 2.5); padding: 0 calc(var(--u) * 3);
+  height: calc(var(--u) * 10); flex-shrink: 0;
+}
+.rc-type {
+  font-family: 'Arial Black', Arial, sans-serif; font-weight: 900;
+  font-size: calc(var(--u) * 4); color: #5F5C5D; line-height: 1;
+}
+.rc-hp {
+  font-family: 'Arial Black', Arial, sans-serif; font-weight: 900;
+  font-size: calc(var(--u) * 7); color: #7F1D10; line-height: 1;
+}
+.rc-spacer { flex: 1; }
+.rc-rules-box {
+  background: rgba(233,233,233,0.84);
+  border-top: calc(var(--u) * 0.7) solid #5E5C5D;
+  padding: calc(var(--u) * 3.5) calc(var(--u) * 4);
+  min-height: calc(var(--u) * 31);
+  display: flex; align-items: flex-start; flex-shrink: 0;
+}
+.rc-rules {
+  font-family: 'Trebuchet MS', Trebuchet, sans-serif; font-weight: 700;
+  font-size: calc(var(--u) * 5.0); color: #000; line-height: 1.45;
+}
+
+/* Pile card sizing */
+.pile-card-wrap .ritual-card { --card-w: 90px; }
+.card-back { width: 90px; height: calc(90px * 1.4); }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <div id="top-bar">
+    <button id="btn-restart" title="Restart draft">↺</button>
+    <div id="top-title">RITUAL — WINSTON DRAFT</div>
+    <div class="player-count">P1: <span id="p1-count">0</span> · P2: <span id="p2-count">0</span></div>
+  </div>
+
+  <div id="turn-indicator">
+    <em id="active-player">Player 1</em>'s pick
+    — looking at <em id="pile-looking">Pile 1</em>
+  </div>
+
+  <div id="pile-strip">
+    <div class="pile-slot" id="slot-0">
+      <div class="pile-label">Pile 1</div>
+      <div class="pile-card-wrap" id="wrap-0"></div>
+    </div>
+    <div class="pile-slot" id="slot-1">
+      <div class="pile-label">Pile 2</div>
+      <div class="pile-card-wrap" id="wrap-1"></div>
+    </div>
+    <div class="pile-slot" id="slot-2">
+      <div class="pile-label">Pile 3</div>
+      <div class="pile-card-wrap" id="wrap-2"></div>
+    </div>
+    <div id="draw-stack-slot">
+      <div id="draw-count">0</div>
+      <div id="draw-label">Draw Stack</div>
+    </div>
+  </div>
+
+  <div id="main-area">
+    <div id="list-panel">
+      <div class="list-header">
+        Cards in pile <span id="pile-card-count">0</span>
+      </div>
+      <div id="card-list"></div>
+    </div>
+    <div id="detail-panel">
+      <div id="detail-card-wrap"></div>
+    </div>
+  </div>
+
+  <div id="pin-btns">
+    <button class="pin-btn" id="btn-pass">PASS</button>
+    <button class="pin-btn" id="btn-draft">DRAFT PILE</button>
+  </div>
+
+</div>
+
+<!-- Draft Complete Screen -->
+<div id="complete-screen">
+  <div id="complete-title">DRAFT COMPLETE</div>
+  <div id="complete-sub">Both players have their decks. Begin the duel.</div>
+
+  <div class="copy-section">
+    <div class="copy-section-title">Player 1 Deck</div>
+    <div class="copy-output" id="p1-output"></div>
+    <button class="btn-copy" onclick="copyOutput('p1')">Copy Player 1</button>
+  </div>
+
+  <div class="copy-section">
+    <div class="copy-section-title">Player 2 Deck</div>
+    <div class="copy-output" id="p2-output"></div>
+    <button class="btn-copy" onclick="copyOutput('p2')">Copy Player 2</button>
+  </div>
+
+  <div class="copy-section">
+    <div class="copy-section-title">Both Decks</div>
+    <div class="copy-output" id="both-output"></div>
+    <button class="btn-copy" onclick="copyOutput('both')">Copy Both</button>
+  </div>
+
+  <button id="btn-restart-complete" onclick="initDraft()">↺ New Draft</button>
+</div>
+
+<script>
+// ── ART PATHS ──────────────────────────────────────────────────────────────────
+// In the playable build these are base64. In this repo version, reference by path.
+// Place art files in an /art/ subfolder next to this HTML file.
+const ART = {
+  gilded_pact_cultist:    'art/gildedPactCultist.png',
+  chosen_sacrifice:       'art/chosenSacrifice.png',
+  gilded_knight:          'art/gildedKnight.png',
+  gilded_ritual:          'art/gildedRitual.png',
+  seek_the_worthy:        'art/seekWorthy.png',
+  enlist_the_dead:        'art/enlistDead.png',
+  corpse_collector:       'art/corpseCollector.png',
+  gilded_prophet:         'art/gildedProphet.png',
+  bone_wizard:            'art/boneWizard.png',
+  unwilling_sacrifice:    'art/unwllingSacrifice.png',
+  oblique_pact_cultist:   'art/obliquePactCultist.png',
+  spy:                    'art/spy.png',
+  lead_astray:            'art/leadAstray.png',
+  temporal_rift:          'art/temporalRift.png',
+  mindwarp_mage:          'art/mindwarpMage.png',
+  oblique_hypnotist:      'art/obliqueHypnotist.png',
+  oblique_manipulator:    'art/obliqueManipulator.png',
+  oblique_infiltrator:    'art/obliqueInfiltrator.png',
+  investigate:            'art/investigate.png',
+  psychic_sabotage:       'art/psychicSabotage.png',
+  infernal_pact_cultist:  'art/infernalPactCultist.png',
+  burnt_offering:         'art/burntOffering.png',
+  infernal_knight:        'art/infernalKnight.png',
+  feed:                   'art/feed.png',
+  sunder:                 'art/sunder.png',
+  dark_omen:              'art/darkOmen.png',
+  infernal_grunt:         'art/infernalGrunt.png',
+  darkflame_demon:        'art/darklameDemon.png',
+  infernal_ritual:        'art/infernalRitual.png',
+  infernal_sign:          'art/infernalSign.png',
+  wretched_pact_cultist:  'art/wretchedPactCultist.png',
+  forsaken_architect:     'art/forsakenArchitect.png',
+  eater_of_souls:         'art/eaterSouls.png',
+  wretched_communion:     'art/wretchedCommunion.png',
+  dark_echoes:            'art/darkEchoes.png',
+  burial:                 'art/burial.png',
+  wretched_banisher:      'art/wretchedBanisher.png',
+  wretched_knight:        'art/wretchedKnight.png',
+  cast_into_the_pit:      'art/castIntoPit.png',
+  wretched_dominance:     'art/wretchedDominance.png',
+  corrupted_knowledge:    'art/corruptedKnowledge.png',
+  stolen_essence:         'art/stolenEssence.png',
+  void_gaze:              'art/voidGaze.png',
+  cast_into_void:         'art/castIntoVoid.png',
+  forbidden_knowledge:    'art/forbiddenKnowledge.png',
+  ripped_from_time:       'art/rippedFromTime.png',
+  void_strike:            'art/voidStrike.png',
+  forbidden_spiral:       'art/forbiddenSpiral.png',
+  dimensional_shift:      'art/dimensionalShift.png',
+  reconstitute:           'art/reconstitute.png',
+  dimensional_hourglass:  'art/dimensionalHourglass.png',
+  corrupt_chalice:        'art/corruptChalice.png',
+  obelisk:                'art/obelisk.png',
+  ritual_dagger:          'art/ritualDagger.png',
+  seeker_orb:             'art/seekerOrb.png',
+  warped_simulacra:       'art/warpedSimulacra.png',
+};
+
+const FACTION_ICONS = {
+  gilded:   'art/GildedYellowcirclecolor.png',
+  oblique:  'art/ObliqueBluesquarecolor.png',
+  infernal: 'art/InfernalRedtrianglecolor.png',
+  wretched: 'art/WretchedGreendiamondcolor.png',
+  forbidden:'art/ForbiddenPurplespiralcolor.png',
+  device:   'art/Devicecogcolor.png',
+};
+
+const FACTION_COLORS = {
+  gilded:'#c8922a', oblique:'#7878a0', infernal:'#b82838',
+  wretched:'#307030', forbidden:'#7a3ae8', device:'#306878',
+};
+
+// ── CARD DEFINITIONS ──────────────────────────────────────────────────────────
+const CARDS = [
+  // GILDED
+  {id:'gilded_pact_cultist', name:'Gilded Pact Cultist', type:'Minion', faction:'gilded', cost:1, life:1, rules:'ETB: Draw 1, discard 1.', copies:3},
+  {id:'chosen_sacrifice',    name:'Chosen Sacrifice',    type:'Action',  faction:'gilded', cost:2,          rules:'When this minion dies, draw 2.', copies:3},
+  {id:'gilded_knight',       name:'Gilded Knight',       type:'Minion', faction:'gilded', cost:5, life:3, rules:'When any minion dies, draw 1. (Including this one.)', copies:1},
+  {id:'gilded_ritual',       name:'Gilded Ritual',       type:'Action',  faction:'gilded', cost:4,          rules:'Sacrifice any number of minions. Draw that many cards.', copies:1},
+  {id:'seek_the_worthy',     name:'Seek the Worthy',     type:'Action',  faction:'gilded', cost:3,          rules:'Draw 2, discard 1.', copies:2},
+  {id:'enlist_the_dead',     name:'Enlist the Dead',     type:'Action',  faction:'gilded', cost:5,          rules:'ETB: Put a Minion with cost 3 or less from any discard into play under your control.', copies:3},
+  {id:'corpse_collector',    name:'Corpse Collector',    type:'Minion', faction:'gilded', cost:2, life:2, rules:'ETB: Return cost 1 minion from your discard to your hand.', copies:2},
+  {id:'gilded_prophet',      name:'Gilded Prophet',      type:'Minion', faction:'gilded', cost:3, life:2, rules:'When another non-Gilded minion dies, gain 1 Essence.', copies:2},
+  {id:'bone_wizard',         name:'Bone Wizard',         type:'Minion', faction:'gilded', cost:4, life:1, rules:'ETB: Return up to two minions with cost ≤2 from your discard to your hand.', copies:1},
+  {id:'unwilling_sacrifice', name:'Unwilling Sacrifice', type:'Action',  faction:'gilded', cost:3,          rules:'Target player sacrifices a minion of their choice.', copies:1},
+  // OBLIQUE
+  {id:'oblique_pact_cultist',name:'Oblique Pact Cultist',type:'Minion', faction:'oblique', cost:1, life:1, rules:'ETB: Look at top 2 cards of your deck. Draw one and put one back on top.', copies:3},
+  {id:'spy',                 name:'Spy',                 type:'Action',  faction:'oblique', cost:2,          rules:"Look at opponent's hand. Draw 1.", copies:3},
+  {id:'lead_astray',         name:'Lead Astray',         type:'Action',  faction:'oblique', cost:2,          rules:"Return a minion to its owner's hand. If that minion is not Oblique, draw a card.", copies:3},
+  {id:'temporal_rift',       name:'Temporal Rift',       type:'Action',  faction:'oblique', cost:3,          rules:'Look at top 3 cards of your deck. Put one into your hand and the rest on top in any order.', copies:2},
+  {id:'mindwarp_mage',       name:'Mindwarp Mage',       type:'Minion', faction:'oblique', cost:2, life:2, rules:"Opponent puts one card from their hand on top of their deck.", copies:2},
+  {id:'oblique_hypnotist',   name:'Oblique Hypnotist',   type:'Minion', faction:'oblique', cost:5, life:2, rules:'ETB: Steal an opponent\'s minion that costs 3 or less. (You now control and own that minion.)', copies:2},
+  {id:'oblique_manipulator', name:'Oblique Manipulator', type:'Minion', faction:'oblique', cost:3, life:3, rules:'ETB: Return target minion with HP ≤2 to top of its owner\'s deck.', copies:1},
+  {id:'oblique_infiltrator', name:'Oblique Infiltrator', type:'Minion', faction:'oblique', cost:3, life:3, rules:"Look at opponent's hand. Put one of those cards into your hand.", copies:1},
+  {id:'investigate',         name:'Investigate',         type:'Action',  faction:'oblique', cost:4,          rules:"Draw 2, then look at opponent's hand.", copies:1},
+  {id:'psychic_sabotage',    name:'Psychic Sabotage',    type:'Action',  faction:'oblique', cost:5,          rules:"Look at opponent's hand. Choose two cards. Opponent shuffles them into their deck.", copies:1},
+  // INFERNAL
+  {id:'infernal_pact_cultist',name:'Infernal Pact Cultist',type:'Minion',faction:'infernal',cost:1,life:1, rules:"ETB: Draw 1 and deal 1 damage to an opponent's minion.", copies:3},
+  {id:'burnt_offering',      name:'Burnt Offering',      type:'Action',  faction:'infernal', cost:2,         rules:'Each player discards a card. Draw 1.', copies:3},
+  {id:'infernal_knight',     name:'Infernal Knight',     type:'Minion', faction:'infernal', cost:2, life:2, rules:'When you discard a card, gain 1 Essence.', copies:2},
+  {id:'feed',                name:'Feed',                type:'Action',  faction:'infernal', cost:3,         rules:'Discard 1 non-Infernal card. Draw 2.', copies:2},
+  {id:'sunder',              name:'Sunder',              type:'Action',  faction:'infernal', cost:4,         rules:'Deal 2 damage to all minions.', copies:2},
+  {id:'dark_omen',           name:'Dark Omen',           type:'Action',  faction:'infernal', cost:4,         rules:'Choose a minion and reveal the top card of your deck. Deal damage to that minion equal to the revealed card\'s cost.', copies:3},
+  {id:'infernal_grunt',      name:'Infernal Grunt',      type:'Minion', faction:'infernal', cost:2, life:2, rules:'When this dies, each player discards a card.', copies:2},
+  {id:'darkflame_demon',     name:'Darkflame Demon',     type:'Minion', faction:'infernal', cost:4, life:3, rules:'ETB: Each player discards 2 cards.', copies:1},
+  {id:'infernal_ritual',     name:'Infernal Ritual',     type:'Action',  faction:'infernal', cost:5,         rules:'Destroy a minion and/or device.', copies:1},
+  {id:'infernal_sign',       name:'Infernal Sign',       type:'Action',  faction:'infernal', cost:3,         rules:'You and opponent each discard a card. The player who discarded the card with the highest Essence cost may destroy an opponent\'s minion.', copies:1},
+  // WRETCHED
+  {id:'wretched_pact_cultist',name:'Wretched Pact Cultist',type:'Minion',faction:'wretched',cost:1,life:2, rules:'ETB: If you control more minions than opponent, draw 1.', copies:3},
+  {id:'forsaken_architect',  name:'Forsaken Architect',  type:'Minion', faction:'wretched', cost:3, life:2, rules:'At the start of your turn, if you control more minions than your opponent, draw 1.', copies:2},
+  {id:'eater_of_souls',      name:'Eater of Souls',      type:'Minion', faction:'wretched', cost:2, life:2, rules:"ETB: Banish two cards from opponent's discard.", copies:2},
+  {id:'wretched_communion',  name:'Wretched Communion',  type:'Action',  faction:'wretched', cost:3,         rules:'Draw 2 cards, then opponent draws 1 card.', copies:3},
+  {id:'dark_echoes',         name:'Dark Echoes',         type:'Action',  faction:'wretched', cost:2,         rules:"Choose a card in opponent's discard. Put it on bottom of their deck. Draw 1.", copies:3},
+  {id:'burial',              name:'Burial',              type:'Action',  faction:'wretched', cost:3,         rules:"Choose a non-Wretched card in opponent's hand. Put it on bottom of their deck.", copies:2},
+  {id:'wretched_banisher',   name:'Wretched Banisher',   type:'Minion', faction:'wretched', cost:4, life:3, rules:'ETB: Opponent chooses a minion they control and puts it on bottom of their deck.', copies:1},
+  {id:'wretched_knight',     name:'Wretched Knight',     type:'Minion', faction:'wretched', cost:5, life:4, rules:'Whenever a minion enters under your control, opponent puts a card from their discard on bottom of their deck.', copies:1},
+  {id:'cast_into_the_pit',   name:'Cast into the Pit',   type:'Action',  faction:'wretched', cost:4,         rules:"Banish up to two cards from opponent's discard. Draw 1.", copies:1},
+  {id:'wretched_dominance',  name:'Wretched Dominance',  type:'Action',  faction:'wretched', cost:3,         rules:'If you control more minions than opponent, draw 2. Otherwise draw 1.', copies:1},
+  // FORBIDDEN
+  {id:'corrupted_knowledge', name:'Corrupted Knowledge', type:'Forbidden Action', faction:'forbidden', sanityCost:-1, rules:'Draw 1.', copies:3},
+  {id:'stolen_essence',      name:'Stolen Essence',      type:'Forbidden Action', faction:'forbidden', sanityCost:-1, rules:'Gain 2 Essence.', copies:2},
+  {id:'void_gaze',           name:'Void Gaze',           type:'Forbidden Action', faction:'forbidden', sanityCost:-3, rules:'Draw 2.', copies:1},
+  {id:'cast_into_void',      name:'Cast Into the Void',  type:'Forbidden Action', faction:'forbidden', sanityCost:-2, rules:'Banish target Minion.', copies:2},
+  {id:'forbidden_knowledge', name:'Forbidden Knowledge', type:'Forbidden Action', faction:'forbidden', sanityCost:-1, rules:'Banish two cards from your hand, then draw 2.', copies:3},
+  {id:'ripped_from_time',    name:'Ripped From Time',    type:'Forbidden Action', faction:'forbidden', sanityCost:-2, rules:'Return a card from your discard to your hand.', copies:1},
+  {id:'void_strike',         name:'Void Strike',         type:'Forbidden Action', faction:'forbidden', sanityCost:-2, rules:'Deal damage to a minion equal to the number of Forbidden cards in its controller\'s discard.', copies:2},
+  {id:'forbidden_spiral',    name:'Forbidden Spiral',    type:'Forbidden Action', faction:'forbidden', sanityCost:-5, rules:'Draw a card, then draw an additional card for each Forbidden card in your discard.', copies:1},
+  {id:'dimensional_shift',   name:'Dimensional Shift',   type:'Forbidden Action', faction:'forbidden', sanityCost:-4, rules:'Swap a card in your hand with a card in any discard.', copies:1},
+  {id:'reconstitute',        name:'Reconstitute',        type:'Forbidden Action', faction:'forbidden', sanityCost:-3, rules:'Take a card from your Essence supply and return it to your hand.', copies:1},
+  // DEVICES
+  {id:'obelisk',             name:'Obelisk',             type:'Device', faction:'device', cost:3, rules:'At the start of your turn, gain 1 Essence plus 1 additional Essence for each other Obelisk you control.', copies:3},
+  {id:'dimensional_hourglass',name:'Dimensional Hourglass',type:'Device',faction:'device',cost:2, rules:'Deplete this device and pay 2 Essence: Draw 1.', copies:2},
+  {id:'corrupt_chalice',     name:'Corrupt Chalice',     type:'Device', faction:'device', cost:4, rules:'Sacrifice this device: Deal 3 damage to a minion.', copies:1},
+  {id:'ritual_dagger',       name:'Ritual Dagger',       type:'Device', faction:'device', cost:5, rules:'Deplete this device and sacrifice a minion: Opponent discards a card of their choice.', copies:1},
+  {id:'seeker_orb',          name:'Seeker Orb',          type:'Device', faction:'device', cost:2, rules:'Sacrifice this device: Return another non-action card from your discard to your hand.', copies:1},
+  {id:'warped_simulacra',    name:'Warped Simulacra',    type:'Device', faction:'device', cost:4, rules:'Deplete this device: Deal 1 damage to a minion. Then, if you have 5 or less sanity, banish this device.', copies:2},
+];
+
+// ── BUILD POOL ────────────────────────────────────────────────────────────────
+function buildPool() {
+  const pool = [];
+  CARDS.forEach(c => {
+    for (let i = 0; i < c.copies; i++) pool.push(c.id);
+  });
+  return shuffle(pool);
+}
+
+function shuffle(a) {
+  const b = [...a];
+  for (let i = b.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [b[i], b[j]] = [b[j], b[i]];
+  }
+  return b;
+}
+
+function C(id) { return CARDS.find(c => c.id === id) || null; }
+
+// ── DRAFT STATE ───────────────────────────────────────────────────────────────
+let DS = null; // draft state
+let selectedCardId = null;
+
+function initDraft() {
+  const pool = buildPool();
+  DS = {
+    drawStack: pool.slice(3),
+    piles: [[pool[0]], [pool[1]], [pool[2]]],
+    players: [[], []],   // 0 = P1, 1 = P2
+    active: 0,           // 0 = P1, 1 = P2
+    looking: 0,          // which pile index we're currently showing (0,1,2)
+    phase: 'drafting',
+  };
+  selectedCardId = null;
+  document.getElementById('complete-screen').classList.remove('open');
+  renderDraft();
+  showPile(0);
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderDraft() {
+  // Top counts
+  document.getElementById('p1-count').textContent = DS.players[0].length;
+  document.getElementById('p2-count').textContent = DS.players[1].length;
+  // Draw stack
+  document.getElementById('draw-count').textContent = DS.drawStack.length;
+  // Turn indicator
+  document.getElementById('active-player').textContent = DS.active === 0 ? 'Player 1' : 'Player 2';
+  document.getElementById('pile-looking').textContent = 'Pile ' + (DS.looking + 1);
+  // Render pile strip
+  for (let i = 0; i < 3; i++) {
+    const wrap = document.getElementById('wrap-' + i);
+    wrap.innerHTML = '';
+    const pile = DS.piles[i];
+    if (pile.length === 0) {
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      back.style.cssText = 'width:90px;height:' + (90*1.4) + 'px;opacity:0.15';
+      wrap.appendChild(back);
+    } else {
+      // Show face-down back, highlight the one being looked at
+      const back = document.createElement('div');
+      back.className = 'card-back';
+      back.style.cssText = 'width:90px;height:' + Math.round(90*1.4) + 'px;' +
+        (i === DS.looking ? 'border-color:#c8922a;box-shadow:0 0 12px rgba(200,146,42,0.5)' : '');
+      wrap.appendChild(back);
+      // Badge with count
+      if (pile.length > 0) {
+        const badge = document.createElement('div');
+        badge.className = 'pile-badge';
+        badge.textContent = pile.length;
+        wrap.appendChild(badge);
+      }
+    }
+    // Click to peek at a pile
+    wrap.style.cursor = 'pointer';
+    wrap.onclick = () => showPile(i);
+  }
+  // Buttons
+  const atLast = (DS.looking === 2);
+  document.getElementById('btn-pass').textContent = atLast ? 'TAKE FROM STACK' : 'PASS';
+  document.getElementById('btn-draft').disabled = DS.piles[DS.looking].length === 0;
+}
+
+function showPile(idx) {
+  DS.looking = idx;
+  const pile = DS.piles[idx];
+  const listEl = document.getElementById('card-list');
+  listEl.innerHTML = '';
+  document.getElementById('pile-card-count').textContent = pile.length;
+
+  if (pile.length === 0) {
+    listEl.innerHTML = '<div style="padding:12px 10px;font-size:11px;color:#5a5278">Pile is empty.</div>';
+    document.getElementById('detail-card-wrap').innerHTML = '';
+    renderDraft();
+    return;
+  }
+
+  pile.forEach((id, i) => {
+    const c = C(id);
+    if (!c) return;
+    const row = document.createElement('div');
+    row.className = 'list-row' + (id === selectedCardId ? ' active' : '');
+
+    const dot = document.createElement('div');
+    dot.className = 'list-faction-dot';
+    dot.style.background = FACTION_COLORS[c.faction] || '#555';
+
+    const name = document.createElement('div');
+    name.className = 'list-name';
+    name.textContent = c.name;
+
+    const cost = document.createElement('div');
+    cost.className = 'list-cost';
+    cost.textContent = c.type === 'Forbidden Action' ? (c.sanityCost || 0) + '☽' : (c.cost || 0) + '⚗';
+
+    const type = document.createElement('div');
+    type.className = 'list-type-badge';
+    type.textContent = c.type === 'Forbidden Action' ? 'Forbidden' :
+                       c.type === 'Minion' ? 'M' :
+                       c.type === 'Action' ? 'A' : 'D';
+
+    row.appendChild(dot);
+    row.appendChild(name);
+    row.appendChild(cost);
+    row.appendChild(type);
+    row.addEventListener('click', () => selectCard(id));
+    listEl.appendChild(row);
+  });
+
+  // Auto-select top card
+  if (pile.length > 0) selectCard(pile[0]);
+  renderDraft();
+}
+
+function selectCard(id) {
+  selectedCardId = id;
+  const c = C(id);
+  const wrap = document.getElementById('detail-card-wrap');
+  wrap.innerHTML = '';
+  if (!c) return;
+  wrap.appendChild(buildCard(c));
+  // Update list active state
+  document.querySelectorAll('.list-row').forEach((row, i) => {
+    const pile = DS.piles[DS.looking];
+    row.classList.toggle('active', pile[i] === id);
+  });
+}
+
+// ── CARD BUILDER ──────────────────────────────────────────────────────────────
+function buildCard(c) {
+  const isForbidden = c.type === 'Forbidden Action';
+  const isMinion = c.type === 'Minion';
+  const cost = isForbidden ? (c.sanityCost || 0) : (c.cost || 0);
+  const artSrc = ART[c.id] || '';
+  const iconSrc = FACTION_ICONS[c.faction] || '';
+
+  const card = document.createElement('div');
+  card.className = 'ritual-card';
+
+  // Art
+  if (artSrc) {
+    const img = document.createElement('img');
+    img.className = 'rc-art';
+    img.src = artSrc;
+    img.alt = '';
+    card.appendChild(img);
+  } else {
+    const ph = document.createElement('div');
+    ph.className = 'rc-art-placeholder';
+    if (iconSrc) {
+      const ico = document.createElement('img');
+      ico.src = iconSrc; ico.alt = '';
+      ph.appendChild(ico);
+    }
+    card.appendChild(ph);
+  }
+
+  // Cost circle
+  const costEl = document.createElement('div');
+  costEl.className = 'rc-cost' + (isForbidden ? ' is-sanity' : '');
+  const costVal = document.createElement('span');
+  costVal.className = 'rc-cost-val';
+  costVal.textContent = cost;
+  costEl.appendChild(costVal);
+  card.appendChild(costEl);
+
+  // Faction icon
+  if (iconSrc) {
+    const fi = document.createElement('div');
+    fi.className = 'rc-faction-icon';
+    const fiImg = document.createElement('img');
+    fiImg.src = iconSrc; fiImg.alt = '';
+    fi.appendChild(fiImg);
+    card.appendChild(fi);
+  }
+
+  // Overlay
+  const overlay = document.createElement('div');
+  overlay.className = 'rc-overlay';
+
+  // Name bar
+  const nameBar = document.createElement('div');
+  nameBar.className = 'rc-name-bar';
+  const nameEl = document.createElement('span');
+  nameEl.className = 'rc-name';
+  nameEl.textContent = c.name;
+  nameBar.appendChild(nameEl);
+  overlay.appendChild(nameBar);
+
+  // Type bar
+  const typeBar = document.createElement('div');
+  typeBar.className = 'rc-type-bar';
+  const typeEl = document.createElement('span');
+  typeEl.className = 'rc-type';
+  typeEl.textContent = isForbidden ? 'Forbidden' : c.type;
+  typeBar.appendChild(typeEl);
+  if (isMinion && c.life != null) {
+    const hpEl = document.createElement('span');
+    hpEl.className = 'rc-hp';
+    hpEl.textContent = c.life;
+    typeBar.appendChild(hpEl);
+  }
+  overlay.appendChild(typeBar);
+
+  // Spacer
+  const spacer = document.createElement('div');
+  spacer.className = 'rc-spacer';
+  overlay.appendChild(spacer);
+
+  // Rules box
+  const rulesBox = document.createElement('div');
+  rulesBox.className = 'rc-rules-box';
+  const rulesEl = document.createElement('p');
+  rulesEl.className = 'rc-rules';
+  rulesEl.textContent = c.rules || '';
+  rulesBox.appendChild(rulesEl);
+  overlay.appendChild(rulesBox);
+
+  card.appendChild(overlay);
+  return card;
+}
+
+// ── DRAFT ACTIONS ─────────────────────────────────────────────────────────────
+function draftPile() {
+  const idx = DS.looking;
+  const pile = DS.piles[idx];
+  if (pile.length === 0) return;
+
+  // Take all cards in pile
+  DS.players[DS.active].push(...pile);
+  DS.piles[idx] = [];
+
+  // Replenish from draw stack
+  if (DS.drawStack.length > 0) {
+    DS.piles[idx].push(DS.drawStack.shift());
+  }
+
+  endTurn();
+}
+
+function passPile() {
+  const idx = DS.looking;
+
+  // If on pile 3, must take from draw stack
+  if (idx === 2) {
+    if (DS.drawStack.length > 0) {
+      DS.players[DS.active].push(DS.drawStack.shift());
+    }
+    endTurn();
+    return;
+  }
+
+  // Add card from draw stack to current pile
+  if (DS.drawStack.length > 0) {
+    DS.piles[idx].push(DS.drawStack.shift());
+  }
+
+  // Move to next pile
+  DS.looking = idx + 1;
+  showPile(DS.looking);
+}
+
+function endTurn() {
+  // Check if draft is over
+  const anyCards = DS.piles.some(p => p.length > 0) || DS.drawStack.length > 0;
+  if (!anyCards) {
+    showComplete();
+    return;
+  }
+
+  // Switch player
+  DS.active = DS.active === 0 ? 1 : 0;
+  DS.looking = 0;
+
+  // Find first non-empty pile
+  let start = 0;
+  while (start < 3 && DS.piles[start].length === 0) start++;
+  if (start < 3) {
+    DS.looking = start;
+    showPile(start);
+  } else if (DS.drawStack.length > 0) {
+    // All piles empty, take from stack
+    DS.players[DS.active].push(DS.drawStack.shift());
+    endTurn();
+  } else {
+    showComplete();
+  }
+}
+
+// ── DRAFT COMPLETE ────────────────────────────────────────────────────────────
+function showComplete() {
+  DS.phase = 'complete';
+
+  const p1Text = formatDeck(DS.players[0], 'Player 1');
+  const p2Text = formatDeck(DS.players[1], 'Player 2');
+
+  document.getElementById('p1-output').textContent = p1Text;
+  document.getElementById('p2-output').textContent = p2Text;
+  document.getElementById('both-output').textContent = p1Text + '\n\n' + p2Text;
+  document.getElementById('complete-screen').classList.add('open');
+}
+
+function formatDeck(ids, playerName) {
+  // Count quantities
+  const counts = {};
+  ids.forEach(id => { counts[id] = (counts[id] || 0) + 1; });
+
+  // Group by faction
+  const factionOrder = ['gilded','oblique','infernal','wretched','forbidden','device'];
+  const factionNames = {
+    gilded:'Gilded', oblique:'Oblique', infernal:'Infernal',
+    wretched:'Wretched', forbidden:'Forbidden', device:'Device',
+  };
+
+  let text = '=== ' + playerName.toUpperCase() + ' — ' + ids.length + ' CARDS ===\n';
+
+  factionOrder.forEach(f => {
+    const cards = Object.keys(counts)
+      .map(id => C(id))
+      .filter(c => c && c.faction === f && counts[c.id] > 0)
+      .sort((a, b) => (a.cost || a.sanityCost || 0) - (b.cost || b.sanityCost || 0));
+
+    if (cards.length === 0) return;
+    text += '\n[' + factionNames[f] + ']\n';
+    cards.forEach(c => {
+      const qty = counts[c.id];
+      const costStr = c.type === 'Forbidden Action'
+        ? '[' + (c.sanityCost || 0) + ' SAN]'
+        : '[' + (c.cost || 0) + ' ESS]';
+      const hpStr = c.life != null ? ' HP:' + c.life : '';
+      text += qty + 'x  ' + c.name.padEnd(24) + costStr + hpStr + '\n';
+    });
+  });
+
+  // Machine-readable JSON
+  const jsonCards = Object.keys(counts).map(id => ({ id, qty: counts[id] }));
+  text += '\n--- JSON ---\n';
+  text += JSON.stringify({ player: playerName, cards: jsonCards });
+
+  return text;
+}
+
+function copyOutput(which) {
+  const elId = which === 'p1' ? 'p1-output' : which === 'p2' ? 'p2-output' : 'both-output';
+  const text = document.getElementById(elId).textContent;
+  navigator.clipboard.writeText(text).then(() => {
+    const btn = event.target;
+    btn.classList.add('copied');
+    btn.textContent = '✓ Copied';
+    setTimeout(() => {
+      btn.classList.remove('copied');
+      btn.textContent = which === 'p1' ? 'Copy Player 1' : which === 'p2' ? 'Copy Player 2' : 'Copy Both';
+    }, 1800);
+  });
+}
+
+// ── EVENTS ────────────────────────────────────────────────────────────────────
+document.getElementById('btn-restart').addEventListener('click', initDraft);
+document.getElementById('btn-draft').addEventListener('click', draftPile);
+document.getElementById('btn-pass').addEventListener('click', passPile);
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+initDraft();
+</script>
+</body>
+</html>
