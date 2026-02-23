@@ -95,9 +95,8 @@ Both prototypes are **single-file HTML** — open in any browser, no build tools
 
 ## Card Design
 
-Cards are rendered in HTML/CSS using a single `--card-w` variable that controls all sizing proportionally. Full specification in `docs/RITUAL-card-style-guide.md`.
-
-Commissioned artwork by **KnightOwl Studios**.
+Cards are rendered in HTML/CSS using a single --card-w variable that controls all sizing proportionally. Full specification in docs/RITUAL-card-style-guide.md.
+Commissioned artwork by KnightOwl Studios. Art served via sprite sheets in assets/.
 
 ---
 
