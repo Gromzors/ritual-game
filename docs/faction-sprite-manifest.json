@@ -1,0 +1,22 @@
+{
+  "meta": {
+    "file": "faction_sprite_sheet.webp",
+    "format": "webp",
+    "sheetWidth": 1344,
+    "sheetHeight": 896,
+    "cols": 3,
+    "rows": 2,
+    "cellWidth": 448,
+    "cellHeight": 448,
+    "totalCells": 6,
+    "notes": "Grid is 3 columns × 2 rows = 6 faction icons, each 448×448px square."
+  },
+  "factions": [
+    { "id": "device",    "index": 0, "row": 0, "col": 0, "x": 0,    "y": 0,   "w": 448, "h": 448, "color": "#306878", "symbol": "cog",     "originalFile": "Devicecogcolor.png" },
+    { "id": "forbidden", "index": 1, "row": 0, "col": 1, "x": 448,  "y": 0,   "w": 448, "h": 448, "color": "#7a3ae8", "symbol": "spiral",  "originalFile": "ForbiddenPurplespiralcolor.png" },
+    { "id": "oblique",   "index": 2, "row": 0, "col": 2, "x": 896,  "y": 0,   "w": 448, "h": 448, "color": "#7878a0", "symbol": "square",  "originalFile": "ObliqueBluesquarecolor.png" },
+    { "id": "gilded",    "index": 3, "row": 1, "col": 0, "x": 0,    "y": 448, "w": 448, "h": 448, "color": "#c8922a", "symbol": "circle",  "originalFile": "GildedYellowcirclecolor.png" },
+    { "id": "infernal",  "index": 4, "row": 1, "col": 1, "x": 448,  "y": 448, "w": 448, "h": 448, "color": "#b82838", "symbol": "triangle","originalFile": "InfernalRedtrianglecolor.png" },
+    { "id": "wretched",  "index": 5, "row": 1, "col": 2, "x": 896,  "y": 448, "w": 448, "h": 448, "color": "#307030", "symbol": "diamond", "originalFile": "WretchedGreendiamondcolor.png" }
+  ]
+}

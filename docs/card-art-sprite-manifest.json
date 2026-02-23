@@ -1,0 +1,413 @@
+{
+  "meta": {
+    "file": "card_art_sprite_sheet.webp",
+    "format": "webp",
+    "sheetWidth": 1008,
+    "sheetHeight": 1204,
+    "cols": 8,
+    "rows": 7,
+    "cellWidth": 126,
+    "cellHeight": 172,
+    "totalCells": 56,
+    "totalCards": 56,
+    "notes": "Grid is exactly 8 columns × 7 rows = 56 cards, filling the sheet completely. Cells are indexed left-to-right, top-to-bottom. x = col * cellWidth, y = row * cellHeight."
+  },
+  "usage": {
+    "cssBackgroundPosition": "background: url('card_art_sprite_sheet.webp'); background-position: calc(var(--col) * -126px) calc(var(--row) * -172px); background-size: 1008px 1204px;",
+    "canvasClip": "ctx.drawImage(sheet, col*126, row*172, 126, 172, destX, destY, destW, destH)"
+  },
+  "cards": [
+    {
+      "id": "boneWizard",
+      "index": 0, "row": 0, "col": 0,
+      "x": 0, "y": 0,
+      "w": 126, "h": 172,
+      "description": "Hooded figure, circular halo ring, holding orb, ruins behind"
+    },
+    {
+      "id": "burial",
+      "index": 1, "row": 0, "col": 1,
+      "x": 126, "y": 0,
+      "w": 126, "h": 172,
+      "description": "Pyramid above ground, burial chamber/stairs descending below"
+    },
+    {
+      "id": "burntOffering",
+      "index": 2, "row": 0, "col": 2,
+      "x": 252, "y": 0,
+      "w": 126, "h": 172,
+      "description": "Tall smoke column rising to dark void/eclipse at top"
+    },
+    {
+      "id": "castIntoPit",
+      "index": 3, "row": 0, "col": 3,
+      "x": 378, "y": 0,
+      "w": 126, "h": 172,
+      "description": "Tiny cloaked figure at edge of enormous square black pit, tiled ground"
+    },
+    {
+      "id": "castIntoVoid",
+      "index": 4, "row": 0, "col": 4,
+      "x": 504, "y": 0,
+      "w": 126, "h": 172,
+      "description": "Cloaked figure being flung into a large spiral vortex"
+    },
+    {
+      "id": "chosenSacrifice",
+      "index": 5, "row": 0, "col": 5,
+      "x": 630, "y": 0,
+      "w": 126, "h": 172,
+      "description": "Lone cloaked figure facing ruins, large black circle above"
+    },
+    {
+      "id": "corpseCollector",
+      "index": 6, "row": 0, "col": 6,
+      "x": 756, "y": 0,
+      "w": 126, "h": 172,
+      "description": "Hunched ragged figure with staff and sacks"
+    },
+    {
+      "id": "corruptChalice",
+      "index": 7, "row": 0, "col": 7,
+      "x": 882, "y": 0,
+      "w": 126, "h": 172,
+      "description": "Ornate chalice with dark eclipse/sun radiating above it"
+    },
+    {
+      "id": "corruptedKnowledge",
+      "index": 8, "row": 1, "col": 0,
+      "x": 0, "y": 172,
+      "w": 126, "h": 172,
+      "description": "Large torus/ring eye, cosmic, dripping"
+    },
+    {
+      "id": "darkEchoes",
+      "index": 9, "row": 1, "col": 1,
+      "x": 126, "y": 172,
+      "w": 126, "h": 172,
+      "description": "Large double-diamond/nested diamond watercolor symbol"
+    },
+    {
+      "id": "darklameDemon",
+      "index": 10, "row": 1, "col": 2,
+      "x": 252, "y": 172,
+      "w": 126, "h": 172,
+      "description": "Close-up horned demon face with fire/flame mane"
+    },
+    {
+      "id": "darkOmen",
+      "index": 11, "row": 1, "col": 3,
+      "x": 378, "y": 172,
+      "w": 126, "h": 172,
+      "description": "Black ink-splash horned beast"
+    },
+    {
+      "id": "dimensionalHourglass",
+      "index": 12, "row": 1, "col": 4,
+      "x": 504, "y": 172,
+      "w": 126, "h": 172,
+      "description": "Two diamond shapes joined at center (hourglass geometry)"
+    },
+    {
+      "id": "dimensionalShift",
+      "index": 13, "row": 1, "col": 5,
+      "x": 630, "y": 172,
+      "w": 126, "h": 172,
+      "description": "Figure in doorway framed by enormous circular opening in dark forest"
+    },
+    {
+      "id": "eaterSouls",
+      "index": 14, "row": 1, "col": 6,
+      "x": 756, "y": 172,
+      "w": 126, "h": 172,
+      "description": "Shrouded figure, diamond void for face, cosmic interior"
+    },
+    {
+      "id": "enlistDead",
+      "index": 15, "row": 1, "col": 7,
+      "x": 882, "y": 172,
+      "w": 126, "h": 172,
+      "description": "Full skeleton of large beast (skeletal giraffe/dragon), ruins"
+    },
+    {
+      "id": "feed",
+      "index": 16, "row": 2, "col": 0,
+      "x": 0, "y": 344,
+      "w": 126, "h": 172,
+      "description": "Skeletal bird creature with dead tree growth, walking landscape"
+    },
+    {
+      "id": "forbiddenKnowledge",
+      "index": 17, "row": 2, "col": 1,
+      "x": 126, "y": 344,
+      "w": 126, "h": 172,
+      "description": "Seated cloaked figure silhouetted, large glowing white ring"
+    },
+    {
+      "id": "forbiddenSpiral",
+      "index": 18, "row": 2, "col": 2,
+      "x": 252, "y": 344,
+      "w": 126, "h": 172,
+      "description": "Enormous spiral ring vortex, white center, black/white waves"
+    },
+    {
+      "id": "forsakenArchitect",
+      "index": 19, "row": 2, "col": 3,
+      "x": 378, "y": 344,
+      "w": 126, "h": 172,
+      "description": "Armored traveler walking away, diamond shape + birds floating above"
+    },
+    {
+      "id": "gildedKnight",
+      "index": 20, "row": 2, "col": 4,
+      "x": 504, "y": 344,
+      "w": 126, "h": 172,
+      "description": "Close-up helmeted skull warrior, large curved horns, intricate armor"
+    },
+    {
+      "id": "gildedPactCultist",
+      "index": 21, "row": 2, "col": 5,
+      "x": 630, "y": 344,
+      "w": 126, "h": 172,
+      "description": "Small masked figure with staff, large solid black disc above"
+    },
+    {
+      "id": "gildedProphet",
+      "index": 22, "row": 2, "col": 6,
+      "x": 756, "y": 344,
+      "w": 126, "h": 172,
+      "description": "Extreme close-up horned skull/beast head (from side/below)"
+    },
+    {
+      "id": "gildedRitual",
+      "index": 23, "row": 2, "col": 7,
+      "x": 882, "y": 344,
+      "w": 126, "h": 172,
+      "description": "Tiny cloaked figure on cliff edge overlooking vast dark chasm"
+    },
+    {
+      "id": "infernalGrunt",
+      "index": 24, "row": 3, "col": 0,
+      "x": 0, "y": 516,
+      "w": 126, "h": 172,
+      "description": "Small horned demon leaping/clawing, dynamic pose"
+    },
+    {
+      "id": "infernalKnight",
+      "index": 25, "row": 3, "col": 1,
+      "x": 126, "y": 516,
+      "w": 126, "h": 172,
+      "description": "Winged armored warrior with huge bat wings, sword, splattered ink"
+    },
+    {
+      "id": "infernalPactCultist",
+      "index": 26, "row": 3, "col": 2,
+      "x": 252, "y": 516,
+      "w": 126, "h": 172,
+      "description": "Robed figure in triangular brick archway/gate"
+    },
+    {
+      "id": "infernalRitual",
+      "index": 27, "row": 3, "col": 3,
+      "x": 378, "y": 516,
+      "w": 126, "h": 172,
+      "description": "Black triangle above, two figures below, starfield/cosmos"
+    },
+    {
+      "id": "infernalSign",
+      "index": 28, "row": 3, "col": 4,
+      "x": 504, "y": 516,
+      "w": 126, "h": 172,
+      "description": "Solid black triangle with bright flame cloud around it"
+    },
+    {
+      "id": "investigate",
+      "index": 29, "row": 3, "col": 5,
+      "x": 630, "y": 516,
+      "w": 126, "h": 172,
+      "description": "Figure inside massive stone colonnade/arches ruins"
+    },
+    {
+      "id": "leadAstray",
+      "index": 30, "row": 3, "col": 6,
+      "x": 756, "y": 516,
+      "w": 126, "h": 172,
+      "description": "Many figures in procession/crowd, diamond hole in ground below"
+    },
+    {
+      "id": "mindwarpMage",
+      "index": 31, "row": 3, "col": 7,
+      "x": 882, "y": 516,
+      "w": 126, "h": 172,
+      "description": "Alien deer-skull mask entity, branches from head, dark background"
+    },
+    {
+      "id": "obelisk",
+      "index": 32, "row": 4, "col": 0,
+      "x": 0, "y": 688,
+      "w": 126, "h": 172,
+      "description": "Tall stone obelisk/monolith, tiny cloaked figure at base"
+    },
+    {
+      "id": "obliqueHypnotist",
+      "index": 33, "row": 4, "col": 1,
+      "x": 126, "y": 688,
+      "w": 126, "h": 172,
+      "description": "Robed figure among brick ruins, black square with dot above"
+    },
+    {
+      "id": "obliqueInfiltrator",
+      "index": 34, "row": 4, "col": 2,
+      "x": 252, "y": 688,
+      "w": 126, "h": 172,
+      "description": "Wide-hat wizard walking through rocky wasteland, staff, crows"
+    },
+    {
+      "id": "obliqueManipulator",
+      "index": 35, "row": 4, "col": 3,
+      "x": 378, "y": 688,
+      "w": 126, "h": 172,
+      "description": "Elegant pointy-headed figure in robes with large moon disc behind"
+    },
+    {
+      "id": "obliquePactCultist",
+      "index": 36, "row": 4, "col": 4,
+      "x": 504, "y": 688,
+      "w": 126, "h": 172,
+      "description": "Square-headed cultist reading book, ruins, circular halo"
+    },
+    {
+      "id": "psychicSabotage",
+      "index": 37, "row": 4, "col": 5,
+      "x": 630, "y": 688,
+      "w": 126, "h": 172,
+      "description": "Square-within-square geometric, neural branching patterns, black circle center"
+    },
+    {
+      "id": "reconstitute",
+      "index": 38, "row": 4, "col": 6,
+      "x": 756, "y": 688,
+      "w": 126, "h": 172,
+      "description": "Dark bird creature made of organic matter/mushrooms, side of cliff"
+    },
+    {
+      "id": "rippedFromTime",
+      "index": 39, "row": 4, "col": 7,
+      "x": 882, "y": 688,
+      "w": 126, "h": 172,
+      "description": "Layered diamond geometric with crackling lightning/branches"
+    },
+    {
+      "id": "ritualDagger",
+      "index": 40, "row": 5, "col": 0,
+      "x": 0, "y": 860,
+      "w": 126, "h": 172,
+      "description": "Extreme close-up hand gripping dagger"
+    },
+    {
+      "id": "seekerOrb",
+      "index": 41, "row": 5, "col": 1,
+      "x": 126, "y": 860,
+      "w": 126, "h": 172,
+      "description": "Flaming eye floating above ruins/pit, dark clouds — dark circular void with radiating smoke rings"
+    },
+    {
+      "id": "seekWorthy",
+      "index": 42, "row": 5, "col": 2,
+      "x": 252, "y": 860,
+      "w": 126, "h": 172,
+      "description": "Eye-shaped chalice on pedestal (eye as the cup)"
+    },
+    {
+      "id": "spy",
+      "index": 43, "row": 5, "col": 3,
+      "x": 378, "y": 860,
+      "w": 126, "h": 172,
+      "description": "Giant eye/eclipse above landscape, robed figures watching below"
+    },
+    {
+      "id": "stolenEssence",
+      "index": 44, "row": 5, "col": 4,
+      "x": 504, "y": 860,
+      "w": 126, "h": 172,
+      "description": "Flaming eye/teardrop shape, small"
+    },
+    {
+      "id": "sunder",
+      "index": 45, "row": 5, "col": 5,
+      "x": 630, "y": 860,
+      "w": 126, "h": 172,
+      "description": "Cracked landscape with deep fissure stretching to horizon, clouds"
+    },
+    {
+      "id": "temporalRift",
+      "index": 46, "row": 5, "col": 6,
+      "x": 756, "y": 860,
+      "w": 126, "h": 172,
+      "description": "Cosmic galaxy/milky way tearing through cracked earth"
+    },
+    {
+      "id": "unwllingSacrifice",
+      "index": 47, "row": 5, "col": 7,
+      "x": 882, "y": 860,
+      "w": 126, "h": 172,
+      "description": "Monstrous heron/crane creature on ruins"
+    },
+    {
+      "id": "voidGaze",
+      "index": 48, "row": 6, "col": 0,
+      "x": 0, "y": 1032,
+      "w": 126, "h": 172,
+      "description": "Enormous dark planet/orb with radiating light, above clouds"
+    },
+    {
+      "id": "voidStrike",
+      "index": 49, "row": 6, "col": 1,
+      "x": 126, "y": 1032,
+      "w": 126, "h": 172,
+      "description": "Robed figure in ruins, sharp 4-pointed star/diamond above"
+    },
+    {
+      "id": "warpedSimulacra",
+      "index": 50, "row": 6, "col": 2,
+      "x": 252, "y": 1032,
+      "w": 126, "h": 172,
+      "description": "Flying manta/bat creature over ruined stone arch"
+    },
+    {
+      "id": "wretchedBanisher",
+      "index": 51, "row": 6, "col": 3,
+      "x": 378, "y": 1032,
+      "w": 126, "h": 172,
+      "description": "Plague-masked hooded figure, diamond void in chest, stone columns"
+    },
+    {
+      "id": "wretchedCommunion",
+      "index": 52, "row": 6, "col": 4,
+      "x": 504, "y": 1032,
+      "w": 126, "h": 172,
+      "description": "Half-black/half-grey large diamond shape, robed group below on stairs"
+    },
+    {
+      "id": "wretchedDominance",
+      "index": 53, "row": 6, "col": 5,
+      "x": 630, "y": 1032,
+      "w": 126, "h": 172,
+      "description": "Solid black diamond, dark hooded group below, open wasteland"
+    },
+    {
+      "id": "wretchedKnight",
+      "index": 54, "row": 6, "col": 6,
+      "x": 756, "y": 1032,
+      "w": 126, "h": 172,
+      "description": "Close-up armored skull-horned warrior (single large curved horn)"
+    },
+    {
+      "id": "wretchedPactCultist",
+      "index": 55, "row": 6, "col": 7,
+      "x": 882, "y": 1032,
+      "w": 126, "h": 172,
+      "description": "Square-headed cultist with diamond eye, dark stone corridor"
+    }
+  ]
+}
