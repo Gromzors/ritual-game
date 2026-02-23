@@ -40,6 +40,9 @@ Players race to empty their deck. First player to attempt a draw with 0 cards re
 ```
 ritual-game/
 ├── README.md
+├── assets/
+    ├──  card_art_sprite_sheet.webp  — all card background art
+    └── faction_sprite_sheet.webp    — faction icons
 ├── docs/
 │   ├── ritual-rules-v1.md          — Full game rules
 │   ├── ritual-card-manifest.md     — All 56 cards with stats & rules text
