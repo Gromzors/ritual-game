@@ -41,15 +41,20 @@ Players race to empty their deck. First player to attempt a draw with 0 cards re
 ritual-game/
 ├── README.md
 ├── assets/
-    ├──  card_art_sprite_sheet.webp  — all card background art
-    └── faction_sprite_sheet.webp    — faction icons
+│   ├── card_art_sprite_sheet.webp
+│   └── faction_sprite_sheet.webp
 ├── docs/
-│   ├── ritual-rules-v1.md          — Full game rules
-│   ├── ritual-card-manifest.md     — All 56 cards with stats & rules text
-│   └── RITUAL-card-style-guide.md  — Card rendering specification (HTML/CSS)
+│   ├── ritual-rules-v1.md
+│   ├── ritual-card-manifest.md
+│   ├── RITUAL-card-style-guide.md
+│   ├── card-art-sprite-manifest.json
+│   ├── faction-sprite-manifest.json
+│   └── sprite-migration-guide.md
+├── scripts/
+│   └── sprites.js
 └── prototypes/
-    ├── ritual-winston-draft-v1.html — Playable Winston Draft engine
-    └── ritual-duel-v1.html          — Playable Duel engine (hotseat)
+    ├── ritual-winston-draft-v1.html
+    └── ritual-duel-v2.html
 ```
 
 ---
