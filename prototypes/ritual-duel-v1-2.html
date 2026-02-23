@@ -1,0 +1,1930 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>RITUAL — Duel v1</title>
+<style>
+/* Fonts: Rajdhani + Inter loaded from Google Fonts in playable build. Fallbacks used here. */
+
+:root {
+  --bg:         #080810;
+  --surface:    #0e0e1c;
+  --surface2:   #13132a;
+  --border:     #252545;
+  --border-hi:  #4a3880;
+  --text:       #c0b8e0;
+  --text-dim:   #5a5278;
+  --text-hi:    #e8e0ff;
+  --gold:       #c8922a;
+  --gold-hi:    #e8b84a;
+  --essence:    #6a3ae0;
+  --essence-hi: #9060ff;
+  --sanity:     #1e7aaa;
+  --sanity-hi:  #3ab0e0;
+  --red:        #b82838;
+  --red-hi:     #e04858;
+  --green:      #207840;
+  --gray:       #3a3258;
+  --gilded:     #c8922a;
+  --oblique:    #7878a0;
+  --infernal:   #b82838;
+  --wretched:   #307030;
+  --forbidden:  #6a3ae0;
+  --device:     #306878;
+  /* Layout heights — driven by responsive card size */
+  --opp-strip:  56px;
+  --bf-min:     calc(var(--card-h-bf) + 16px);
+  --ctrl-h:     52px;
+  --hand-h:     calc(var(--card-h) + 32px);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html, body {
+  height: 100%; overflow: hidden;
+  background: var(--bg);
+  color: var(--text);
+  font-family: 'Inter', sans-serif;
+  font-size: 15px;
+  background-image:
+    radial-gradient(ellipse at 10% 30%, rgba(106,58,224,0.05) 0%, transparent 55%),
+    radial-gradient(ellipse at 90% 70%, rgba(184,40,56,0.04) 0%, transparent 55%),
+    url("data:image/svg+xml,%3Csvg width='40' height='40' viewBox='0 0 40 40' xmlns='http://www.w3.org/2000/svg'%3E%3Cpath d='M20 0 L21 19 L40 20 L21 21 L20 40 L19 21 L0 20 L19 19 Z' fill='%23252545' fill-opacity='0.12'/%3E%3C/svg%3E");
+}
+
+/* ── FULL-SCREEN FLEX COLUMN ── */
+#app {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  height: 100dvh;
+  max-width: 700px;
+  margin: 0 auto;
+  overflow: hidden;
+}
+
+/* ══ ZONE 1: OPPONENT STRIP ══════════════════════════════════════════ */
+.opp-strip {
+  flex: 0 0 var(--opp-strip);
+  background: var(--surface);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 0 12px;
+  position: relative;
+}
+.opp-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 10px; letter-spacing: 0.9px; color: var(--text-dim);
+  flex-shrink: 0;
+}
+.opp-stats {
+  display: flex; align-items: center; gap: 12px; flex: 1;
+}
+.opp-stat {
+  display: flex; flex-direction: column; align-items: center; gap: 1px;
+}
+.opp-stat-val {
+  font-family: 'Rajdhani', sans-serif; font-size: 13px;
+}
+.opp-stat-lbl { font-size: 10px; color: var(--text-dim); letter-spacing: 0.2px; }
+.opp-san-val  { color: var(--sanity-hi); }
+.opp-ess-val  { color: var(--essence-hi); }
+.opp-dim-val  { color: var(--text-dim); }
+.opp-san-bar-wrap {
+  flex: 1; height: 4px;
+  background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;
+}
+.opp-san-bar-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--sanity), var(--sanity-hi));
+  transition: width 0.35s ease;
+}
+.turn-badge {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px; letter-spacing: 0.7px;
+  color: var(--gold); border: 1px solid var(--gold);
+  padding: 3px 7px; border-radius: 3px;
+  opacity: 0.85; flex-shrink: 0;
+}
+
+/* ══ ZONE 2: OPPONENT BATTLEFIELD ═══════════════════════════════════ */
+.opp-bf-zone {
+  flex: 1 1 0;
+  min-height: var(--bf-min);
+  background: rgba(14,14,28,0.6);
+  border-bottom: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.bf-zone-lbl {
+  font-size: 10px; letter-spacing: 0.7px; text-transform: uppercase;
+  color: var(--text-dim); padding: 5px 10px 3px;
+  display: flex; justify-content: space-between;
+}
+.bf-zone-lbl span { color: var(--essence-hi); }
+.bf-scroll {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 6px;
+  padding: 4px 10px 8px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: flex-start;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.bf-scroll::-webkit-scrollbar { display: none; }
+
+/* ══ DIVIDER ═════════════════════════════════════════════════════════ */
+.vs-divider {
+  flex: 0 0 22px;
+  display: flex; align-items: center; gap: 10px;
+  padding: 0 12px;
+  background: var(--bg);
+}
+.vs-line { flex: 1; height: 1px; background: linear-gradient(90deg, transparent, var(--border-hi), transparent); }
+.vs-glyph {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px; color: var(--border-hi); opacity: 0.5; white-space: nowrap;
+}
+
+/* ══ ZONE 3: MY BATTLEFIELD ══════════════════════════════════════════ */
+.my-bf-zone {
+  flex: 1 1 0;
+  min-height: var(--bf-min);
+  background: rgba(14,14,28,0.6);
+  border-top: 1px solid var(--border);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+
+/* ══ ZONE 4: MY STATS + CONTROLS ════════════════════════════════════ */
+.my-ctrl {
+  flex: 0 0 auto;
+  background: var(--surface);
+  border-top: 1px solid var(--border);
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 10px;
+}
+.my-stats {
+  display: flex; flex-direction: column; gap: 4px; flex-shrink: 0;
+}
+.my-stat-row {
+  display: flex; align-items: center; gap: 6px;
+}
+.my-stat-icon { font-size: 12px; }
+.my-stat-val  {
+  font-family: 'Rajdhani', sans-serif; font-size: 14px;
+}
+.my-san-val { color: var(--sanity-hi); }
+.my-ess-val { color: var(--essence-hi); }
+.my-san-bar-wrap {
+  width: 60px; height: 4px;
+  background: rgba(255,255,255,0.05); border-radius: 2px; overflow: hidden;
+}
+.my-san-bar-fill {
+  height: 100%; border-radius: 2px;
+  background: linear-gradient(90deg, var(--sanity), var(--sanity-hi));
+  transition: width 0.35s ease;
+}
+.my-counts { font-size: 11px; color: var(--text-dim); display: flex; gap: 8px; }
+.my-counts span { color: var(--text); }
+.ctrl-btns {
+  display: flex; flex-direction: column; gap: 5px; flex: 1;
+}
+.ctrl-row { display: flex; gap: 5px; }
+.status-line {
+  font-size: 11px; color: var(--text-dim); text-align: center;
+  line-height: 1.3; padding: 2px 0;
+}
+
+/* ══ ZONE 5: LOG (collapsible) ═══════════════════════════════════════ */
+.log-bar {
+  flex: 0 0 auto;
+  background: var(--surface2);
+  border-top: 1px solid var(--border);
+  overflow: hidden;
+  transition: max-height 0.2s ease;
+  max-height: 24px;
+}
+.log-bar.expanded { max-height: 90px; }
+.log-toggle {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 4px 10px; cursor: pointer; user-select: none;
+}
+.log-latest {
+  font-size: 10px; color: var(--text-dim);
+  white-space: nowrap; overflow: hidden; text-overflow: ellipsis;
+  max-width: calc(100% - 30px);
+}
+.log-arrow { font-size: 10px; color: var(--text-dim); transition: transform 0.2s; }
+.log-bar.expanded .log-arrow { transform: rotate(180deg); }
+.log-panel {
+  padding: 2px 10px 6px;
+  max-height: 70px; overflow-y: auto;
+  display: flex; flex-direction: column; gap: 1px;
+}
+.log-entry { font-size: 11px; line-height: 1.4; padding: 1px 0; color: var(--text-dim); }
+.log-p1   { color: #8860e8; }
+.log-p2   { color: #e05068; }
+.log-sys  { color: var(--gold); font-style: italic; }
+.log-warn { color: var(--red-hi); }
+.log-win  { color: var(--gold-hi); font-style: italic; }
+.log-panel::-webkit-scrollbar { width: 3px; }
+.log-panel::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+
+/* ══ ZONE 6: HAND ════════════════════════════════════════════════════ */
+.hand-zone {
+  flex: 0 0 var(--hand-h);
+  background: rgba(4,4,10,0.85);
+  border-top: 1px solid var(--border-hi);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}
+.hand-lbl-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 5px 10px 3px;
+  font-size: 11px; letter-spacing: 0.7px; text-transform: uppercase; color: var(--text-dim);
+}
+.hand-lbl-row em { color: var(--gold); font-style: normal; }
+.hand-scroll {
+  flex: 1;
+  display: flex;
+  flex-direction: row;
+  gap: 8px;
+  padding: 4px 10px 6px;
+  overflow-x: auto;
+  overflow-y: hidden;
+  align-items: flex-start;
+  -webkit-overflow-scrolling: touch;
+  scrollbar-width: none;
+}
+.hand-scroll::-webkit-scrollbar { display: none; }
+
+/* ══ BUTTONS ═════════════════════════════════════════════════════════ */
+.btn {
+  font-family: 'Rajdhani', sans-serif; font-size: 10px; font-weight: 600;
+  letter-spacing: 0.5px; padding: 8px 10px; border: 1px solid;
+  border-radius: 3px; cursor: pointer; background: transparent;
+  transition: all 0.12s; text-align: center; white-space: nowrap; flex: 1;
+}
+.btn:hover:not(:disabled) { filter: brightness(1.4); box-shadow: 0 0 8px currentColor; }
+.btn:active:not(:disabled) { transform: scale(0.97); }
+.btn:disabled { opacity: 0.28; cursor: not-allowed; }
+.btn-gold    { color: var(--gold);       border-color: var(--gold); }
+.btn-essence { color: var(--essence-hi); border-color: var(--essence); }
+.btn-dim     { color: var(--text-dim);   border-color: var(--border); }
+.btn-gold:hover:not(:disabled) { background: rgba(200,146,42,0.08); }
+
+/* ══ CARDS ════════════════════════════════════════════════════════════ */
+
+/* Responsive card width: fills 5.167 slots across available width */
+:root {
+  --card-w: clamp(62px, calc((100vw - 20px - 8px * 4.167) / 5.167), 122px);
+  --card-h: calc(var(--card-w) * 1.5);
+  --card-w-bf: calc(var(--card-w) * 0.82);
+  --card-h-bf: calc(var(--card-w-bf) * 1.5);
+}
+
+.card {
+  flex-shrink: 0;
+  width: var(--card-w);
+  height: var(--card-h);
+  background: #f5f0e8;
+  border: 2px solid #c8b89a;
+  border-radius: 6px;
+  display: flex; flex-direction: column;
+  position: relative; user-select: none; overflow: hidden;
+  transition: transform 0.13s, box-shadow 0.13s;
+  box-shadow: 0 2px 6px rgba(0,0,0,0.4);
+  color: #1a1a1a;
+}
+
+/* Battlefield cards */
+.bf-scroll .card {
+  width: var(--card-w-bf);
+  height: var(--card-h-bf);
+}
+
+.card.clickable { cursor: pointer; }
+.card.clickable:hover { transform: translateY(-6px) scale(1.04); z-index: 10; box-shadow: 0 12px 24px rgba(0,0,0,0.5); }
+.card.unplayable { opacity: 0.35; cursor: not-allowed; }
+.card.ess-glow { box-shadow: 0 0 12px rgba(106,58,224,0.7) !important; border-color: var(--essence) !important; }
+.selected-minion { box-shadow: 0 0 14px rgba(224,72,88,0.8) !important; border-color: var(--red-hi) !important; }
+
+/* Faction border accent */
+.f-gilded   { border-color: #c8922a; }
+.f-oblique  { border-color: #3a9ab0; }
+.f-infernal { border-color: #b82838; }
+.f-wretched { border-color: #307030; }
+.f-forbidden{ border-color: #6a3ae0; }
+.f-device   { border-color: #5a6878; }
+
+.card.clickable:hover.f-gilded   { box-shadow: 0 10px 24px rgba(200,146,42,0.5); }
+.card.clickable:hover.f-oblique  { box-shadow: 0 10px 24px rgba(58,154,176,0.5); }
+.card.clickable:hover.f-infernal { box-shadow: 0 10px 24px rgba(184,40,56,0.5); }
+.card.clickable:hover.f-wretched { box-shadow: 0 10px 24px rgba(48,112,48,0.5); }
+.card.clickable:hover.f-forbidden{ box-shadow: 0 10px 24px rgba(106,58,224,0.5); }
+.card.clickable:hover.f-device   { box-shadow: 0 10px 24px rgba(90,104,120,0.5); }
+
+/* ── TOP BAR ── */
+.card-top-bar {
+  display: flex; align-items: center; gap: 3px;
+  padding: 3px 4px 2px;
+  background: #fff;
+  border-bottom: 1px solid #c8b89a;
+  flex-shrink: 0;
+  min-height: 0;
+}
+.card-cost-pip {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: calc(var(--card-w) * 0.13);
+  width:  calc(var(--card-w) * 0.26);
+  height: calc(var(--card-w) * 0.26);
+  border-radius: 50%; border: 1.5px solid #888;
+  background: #e8e8e8; color: #1a1a1a;
+  display: flex; align-items: center; justify-content: center; flex-shrink: 0;
+}
+.pip-essence { background: #e8e8e8; border-color: #888; color: #1a1a1a; }
+.pip-sanity  { background: #3a6a9a; border-color: #1a4a7a; color: #fff; }
+.pip-free    { background: #d0d0d0; border-color: #aaa; color: #555; }
+.card-name {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: calc(var(--card-w) * 0.105);
+  color: #1a1a1a; line-height: 1.1;
+  flex: 1; overflow: hidden;
+}
+
+/* ── FACTION + TYPE ROW ── */
+.card-meta-row {
+  display: flex; align-items: center; justify-content: space-between;
+  padding: 2px 4px;
+  background: rgba(255,255,255,0.7);
+  border-bottom: 1px solid #c8b89a;
+  flex-shrink: 0;
+}
+.card-faction-icon {
+  width:  calc(var(--card-w) * 0.24);
+  height: calc(var(--card-w) * 0.24);
+  object-fit: contain; border-radius: 2px; flex-shrink: 0;
+}
+.card-meta-right {
+  display: flex; align-items: center; gap: 3px;
+}
+.card-type {
+  font-family: 'Rajdhani', sans-serif; font-weight: 600;
+  font-size: calc(var(--card-w) * 0.095);
+  color: #444;
+}
+.card-life {
+  font-family: 'Rajdhani', sans-serif; font-weight: 700;
+  font-size: calc(var(--card-w) * 0.13);
+  color: #b82838;
+}
+
+/* ── ART ZONE ── */
+.card-art {
+  flex: 1; overflow: hidden;
+  background: #ddd;
+  position: relative;
+}
+.card-art img {
+  width: 100%; height: 100%; object-fit: cover; display: block;
+}
+.card-art-placeholder {
+  width: 100%; height: 100%;
+  display: flex; align-items: center; justify-content: center;
+  opacity: 0.15;
+}
+.card-art-placeholder img { width: 60%; height: 60%; object-fit: contain; }
+
+/* ── TEXT BOX ── */
+.card-text-box {
+  flex-shrink: 0;
+  padding: 3px 4px 3px;
+  background: rgba(255,255,255,0.92);
+  border-top: 1px solid #c8b89a;
+  min-height: calc(var(--card-h) * 0.28);
+  max-height: calc(var(--card-h) * 0.35);
+  overflow: hidden;
+}
+.card-rules {
+  font-family: 'Inter', sans-serif;
+  font-size: calc(var(--card-w) * 0.095);
+  color: #1a1a1a; line-height: 1.25;
+}
+.card-rules b { font-weight: 700; }
+.card-rules i { font-style: italic; color: #444; }
+
+/* ── ZOOM OVERLAY ── */
+.card-zoom-overlay {
+  display: none; position: fixed; inset: 0;
+  background: rgba(4,4,10,0.88); z-index: 90;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(4px);
+}
+.card-zoom-overlay.open { display: flex; }
+.card-zoomed {
+  width: min(260px, 72vw);
+  height: calc(min(260px, 72vw) * 1.5);
+  border-radius: 10px; overflow: hidden;
+  box-shadow: 0 0 60px rgba(0,0,0,0.8);
+  display: flex; flex-direction: column;
+}
+/* Zoom card uses same structure, just bigger via --card-w override */
+.card-zoomed .card { 
+  width: 100%; height: 100%;
+  border-radius: 10px;
+}
+.zoom-hint {
+  position: absolute; bottom: -28px; left: 0; right: 0;
+  font-size: 11px; color: rgba(255,255,255,0.4); text-align: center;
+}
+
+/* Pkr selected state */
+.card.pkr-card { cursor: pointer; }
+.card.pkr-selected { transform: translateY(-6px) scale(1.04); z-index: 5; }
+.card.pkr-selected.f-gilded   { box-shadow: 0 10px 24px rgba(200,146,42,0.6);  border-color: #c8922a !important; }
+.card.pkr-selected.f-oblique  { box-shadow: 0 10px 24px rgba(58,154,176,0.6);  border-color: #3a9ab0 !important; }
+.card.pkr-selected.f-infernal { box-shadow: 0 10px 24px rgba(184,40,56,0.6);   border-color: #b82838 !important; }
+.card.pkr-selected.f-wretched { box-shadow: 0 10px 24px rgba(48,112,48,0.6);   border-color: #307030 !important; }
+.card.pkr-selected.f-forbidden{ box-shadow: 0 10px 24px rgba(106,58,224,0.6);  border-color: #6a3ae0 !important; }
+.card.pkr-selected.f-device   { box-shadow: 0 10px 24px rgba(90,104,120,0.6);  border-color: #5a6878 !important; }
+
+.card.bf { overflow: visible; }
+
+
+
+/* Essence token */
+.ess-token {
+  flex-shrink: 0;
+  position: relative;
+  width: 48px; min-height: 64px;
+  background: rgba(106,58,224,0.08); border: 1px solid rgba(106,58,224,0.25);
+  border-radius: 4px; display: flex; flex-direction: column;
+  align-items: center; justify-content: center; gap: 2px; user-select: none;
+}
+.ess-glyph { font-size: 18px; }
+.ess-state { font-size: 8px; color: var(--essence-hi); letter-spacing: 0.5px; }
+.ess-badge {
+  position: absolute;
+  top: -7px; right: -7px;
+  background: var(--essence);
+  color: #fff;
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 9px;
+  width: 18px; height: 18px;
+  border-radius: 50%;
+  display: flex; align-items: center; justify-content: center;
+  border: 1px solid var(--bg);
+  box-shadow: 0 0 6px rgba(106,58,224,0.5);
+}
+
+.card.pkr-card { cursor: pointer; transition: transform 0.13s, border-color 0.13s, box-shadow 0.13s; }
+.card.pkr-card:hover { transform: translateY(-4px) scale(1.03); }
+.card.pkr-selected.f-gilded   { border-color: var(--gilded)   !important; box-shadow: 0 8px 20px rgba(200,146,42,0.45);  transform: translateY(-6px) scale(1.04); }
+.card.pkr-selected.f-oblique  { border-color: var(--oblique)  !important; box-shadow: 0 8px 20px rgba(120,120,160,0.45); transform: translateY(-6px) scale(1.04); }
+.card.pkr-selected.f-infernal { border-color: var(--infernal) !important; box-shadow: 0 8px 20px rgba(184,40,56,0.45);  transform: translateY(-6px) scale(1.04); }
+.card.pkr-selected.f-wretched { border-color: var(--wretched) !important; box-shadow: 0 8px 20px rgba(48,112,48,0.45);  transform: translateY(-6px) scale(1.04); }
+.card.pkr-selected.f-forbidden{ border-color: var(--forbidden)!important; box-shadow: 0 8px 20px rgba(106,58,224,0.45); transform: translateY(-6px) scale(1.04); }
+.card.pkr-selected.f-device   { border-color: var(--device)   !important; box-shadow: 0 8px 20px rgba(48,104,120,0.45);  transform: translateY(-6px) scale(1.04); }
+/* ══ ACTION PANEL ════════════════════════════════════════════════════ */
+#action-row {
+  min-height: 36px;
+  align-items: center;
+}
+.action-panel {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 36px;
+}
+.action-card-name {
+  font-family: 'Rajdhani', sans-serif;
+  font-size: 11px; font-weight: 600;
+  color: var(--text-dim);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 110px;
+}
+.action-card-name em { color: var(--text-hi); font-style: normal; }
+.btn-action {
+  flex: 1;
+  color: var(--red-hi); border-color: var(--red);
+  font-size: 9px; font-weight: 700; padding: 8px 8px;
+}
+.btn-action:hover:not(:disabled) { background: rgba(184,40,56,0.12); }
+.btn-action-dev { color: var(--sanity-hi); border-color: var(--sanity); }
+.btn-action-dev:hover:not(:disabled) { background: rgba(30,122,170,0.12); }
+.btn-dismiss {
+  flex: 0 0 auto; width: 32px; height: 32px; padding: 0;
+  font-size: 14px; color: var(--text-dim); border-color: var(--border);
+  display: flex; align-items: center; justify-content: center;
+}
+.menu-btn {
+  flex: 0 0 auto; width: 44px; font-size: 18px;
+  padding: 6px 0; letter-spacing: 0;
+}
+
+/* ══ PICKER MODAL ════════════════════════════════════════════════════ */
+  display: none; position: fixed; inset: 0;
+  background: rgba(4,4,10,0.92); z-index: 100;
+  align-items: center; justify-content: center;
+  backdrop-filter: blur(3px);
+}
+.modal-bg.open { display: flex; }
+.modal-box {
+  background: var(--surface); border: 1px solid var(--border-hi);
+  border-radius: 7px; padding: 20px 20px 16px;
+  max-width: 94vw; width: 94%; max-height: 88vh; overflow-y: auto;
+  box-shadow: 0 0 50px rgba(106,58,224,0.15);
+  display: flex; flex-direction: column; gap: 12px;
+}
+.modal-box::-webkit-scrollbar { width: 3px; }
+.modal-box::-webkit-scrollbar-thumb { background: var(--border-hi); border-radius: 2px; }
+.modal-title { font-family: 'Rajdhani', sans-serif; font-size: 13px; font-weight: 600; letter-spacing: 1.4px; color: var(--gold); text-align: center; }
+.modal-desc  { font-size: 13px; color: var(--text-dim); text-align: center; line-height: 1.5; }
+.modal-cards { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+.modal-actions { display: flex; gap: 10px; justify-content: center; flex-wrap: wrap; }
+
+/* ══ PASS / END SCREENS ══════════════════════════════════════════════ */
+.pass-screen, .end-screen {
+  display: none; position: fixed; inset: 0;
+  align-items: center; justify-content: center;
+  flex-direction: column; gap: 16px;
+}
+.pass-screen { background: rgba(4,4,10,0.97); z-index: 150; }
+.end-screen  { background: rgba(4,4,10,0.93); z-index: 200; backdrop-filter: blur(4px); }
+.pass-screen.open, .end-screen.open { display: flex; }
+.pass-title { font-family: 'Rajdhani', sans-serif; font-size: 18px; color: var(--gold); letter-spacing: 1.8px; text-align: center; padding: 0 20px; }
+.pass-sub   { font-size: 15px; color: var(--text-dim); text-align: center; padding: 0 20px; }
+.end-title  { font-family: 'Rajdhani', sans-serif; font-size: 22px; text-align: center; padding: 0 20px; }
+.end-title.win  { color: var(--gold);   text-shadow: 0 0 28px rgba(200,146,42,0.5); }
+.end-title.lose { color: var(--red-hi); text-shadow: 0 0 28px rgba(184,40,56,0.5); }
+.end-sub { font-size: 15px; color: var(--text-dim); text-align: center; padding: 0 20px; }
+.pass-screen .btn, .end-screen .btn {
+  flex: 0 0 auto;
+  width: auto;
+  padding: 12px 32px;
+  font-size: 9px;
+}
+</style>
+
+</head>
+<body>
+<div id="app">
+
+  <!-- ZONE 1: OPPONENT STRIP -->
+  <div class="opp-strip">
+    <div class="opp-name" id="opp-name">PLAYER 2</div>
+    <div class="opp-san-bar-wrap">
+      <div class="opp-san-bar-fill" id="p2-san-bar" style="width:100%"></div>
+    </div>
+    <div class="opp-stats">
+      <div class="opp-stat">
+        <div class="opp-stat-val opp-san-val" id="p2-san">10</div>
+        <div class="opp-stat-lbl">🜁 SANITY</div>
+      </div>
+      <div class="opp-stat">
+        <div class="opp-stat-val opp-ess-val" id="p2-ess">0</div>
+        <div class="opp-stat-lbl">⚗ ESS</div>
+      </div>
+      <div class="opp-stat">
+        <div class="opp-stat-val opp-dim-val" id="p2-deck">0</div>
+        <div class="opp-stat-lbl">DECK</div>
+      </div>
+      <div class="opp-stat">
+        <div class="opp-stat-val opp-dim-val" id="p2-hct">0</div>
+        <div class="opp-stat-lbl">HAND</div>
+      </div>
+    </div>
+    <div class="turn-badge" id="turn-badge">TURN 1</div>
+  </div>
+
+  <!-- ZONE 2: OPPONENT BATTLEFIELD -->
+  <div class="opp-bf-zone">
+    <div class="bf-zone-lbl">
+      <span>OPPONENT BATTLEFIELD</span>
+      <span id="p2-esslbl">0 sources</span>
+    </div>
+    <div class="bf-scroll" id="p2-bf"></div>
+  </div>
+
+  <!-- DIVIDER -->
+  <div class="vs-divider">
+    <div class="vs-line"></div>
+    <div class="vs-glyph" id="turn-line">✦ YOUR TURN ✦</div>
+    <div class="vs-line"></div>
+  </div>
+
+  <!-- ZONE 3: MY BATTLEFIELD -->
+  <div class="my-bf-zone">
+    <div class="bf-zone-lbl">
+      <span>YOUR BATTLEFIELD</span>
+      <span id="p1-esslbl">0 sources</span>
+    </div>
+    <div class="bf-scroll" id="p1-bf"></div>
+  </div>
+
+  <!-- ZONE 4: MY STATS + CONTROLS -->
+  <div class="my-ctrl">
+    <div class="my-stats">
+      <div class="my-stat-row">
+        <span class="my-stat-icon">🜁</span>
+        <span class="my-stat-val my-san-val" id="p1-san">10</span>
+        <div class="my-san-bar-wrap">
+          <div class="my-san-bar-fill" id="p1-san-bar" style="width:100%"></div>
+        </div>
+      </div>
+      <div class="my-stat-row">
+        <span class="my-stat-icon">⚗</span>
+        <span class="my-stat-val my-ess-val" id="p1-ess">0</span>
+      </div>
+      <div class="my-counts">
+        Deck <span id="p1-deck">0</span> · Disc <span id="p1-disc">0</span>
+      </div>
+    </div>
+    <div class="ctrl-btns">
+      <div class="ctrl-row">
+        <button class="btn btn-essence" id="btn-ess" onclick="toggleEssMode()">ESSENCE</button>
+        <button class="btn btn-gold"    id="btn-end" onclick="endTurn()">END TURN</button>
+      </div>
+      <div class="status-line" id="p1-status">Your turn.</div>
+      <div class="ctrl-row" id="action-row">
+        <div class="action-panel" id="action-panel">
+          <!-- populated by renderActionPanel() -->
+        </div>
+        <button class="btn btn-dim menu-btn" id="btn-menu" onclick="initGame()">R</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ZONE 5: LOG (collapsible) -->
+  <div class="log-bar" id="log-bar">
+    <div class="log-toggle" onclick="toggleLog()">
+      <div class="log-latest" id="log-latest">The ritual begins…</div>
+      <div class="log-arrow">▲</div>
+    </div>
+    <div class="log-panel" id="log"></div>
+  </div>
+
+  <!-- ZONE 6: HAND -->
+  <div class="hand-zone">
+    <div class="hand-lbl-row">
+      <span>YOUR HAND</span>
+      <em id="hand-count">0 cards</em>
+    </div>
+    <div class="hand-scroll" id="hand-cards"></div>
+  </div>
+
+</div>
+
+<!-- CARD ZOOM OVERLAY -->
+<div class="card-zoom-overlay" id="zoom-overlay" onclick="closeZoom()">
+  <div class="card-zoomed" id="zoom-card"></div>
+</div>
+
+<!-- PICKER MODAL -->
+<div class="modal-bg" id="picker-bg">
+  <div class="modal-box">
+    <div class="modal-title" id="pkr-title">CHOOSE</div>
+    <div class="modal-desc"  id="pkr-desc">Select a card.</div>
+    <div class="modal-cards" id="pkr-cards"></div>
+    <div class="modal-actions">
+      <button class="btn btn-gold" id="pkr-done"   onclick="pickerDone()"   style="display:none">DONE</button>
+      <button class="btn btn-dim"  id="pkr-cancel" onclick="pickerCancel()" style="display:none">CANCEL</button>
+    </div>
+  </div>
+</div>
+
+<!-- PASS SCREEN -->
+<div class="pass-screen" id="pass-screen">
+  <div class="pass-title" id="pass-title">PASS THE DEVICE</div>
+  <div class="pass-sub"   id="pass-sub">Hand it over.</div>
+  <button class="btn btn-gold" onclick="confirmPass()">I'M READY</button>
+</div>
+
+<!-- END SCREEN -->
+<div class="end-screen" id="end-screen">
+  <div class="end-title" id="end-title">RITUAL COMPLETE</div>
+  <div class="end-sub"   id="end-sub"></div>
+  <button class="btn btn-gold" onclick="initGame()">PLAY AGAIN</button>
+</div>
+
+<script>
+'use strict';
+
+// Tracks which minion has the sacrifice button showing: "p1:cardId" or null
+var selectedMinion = null;
+var selectedDevice = null;
+
+// Clicking anywhere outside a card dismisses action buttons
+document.addEventListener('click', function(){
+  if(selectedMinion !== null || selectedDevice !== null){
+    clearSelection();
+  }
+});
+
+var FACTION_ICONS = {
+  gilded:   'art/GildedYellowcirclecolor.png',
+  oblique:  'art/ObliqueBluesquarecolor.png',
+  infernal: 'art/InfernalRedtrianglecolor.png',
+  wretched: 'art/WretchedGreendiamondcolor.png',
+  forbidden:'art/ForbiddenPurplespiralcolor.png',
+  device:   'art/Devicecogcolor.png',
+};
+
+// Card art paths — place art files in an /art/ subfolder next to this HTML file.
+// In the base64 playable build, these are embedded inline instead.
+var CARD_ART = {
+  gilded_pact_cultist:    'art/gildedPactCultist.png',
+  chosen_sacrifice:       'art/chosenSacrifice.png',
+  gilded_knight:          'art/gildedKnight.png',
+  gilded_ritual:          'art/gildedRitual.png',
+  seek_the_worthy:        'art/seekWorthy.png',
+  enlist_the_dead:        'art/enlistDead.png',
+  corpse_collector:       'art/corpseCollector.png',
+  gilded_prophet:         'art/gildedProphet.png',
+  bone_wizard:            'art/boneWizard.png',
+  unwilling_sacrifice:    'art/unwllingSacrifice.png',
+  oblique_pact_cultist:   'art/obliquePactCultist.png',
+  spy:                    'art/spy.png',
+  lead_astray:            'art/leadAstray.png',
+  temporal_rift:          'art/temporalRift.png',
+  mindwarp_mage:          'art/mindwarpMage.png',
+  oblique_hypnotist:      'art/obliqueHypnotist.png',
+  oblique_manipulator:    'art/obliqueManipulator.png',
+  oblique_infiltrator:    'art/obliqueInfiltrator.png',
+  investigate:            'art/investigate.png',
+  psychic_sabotage:       'art/psychicSabotage.png',
+  infernal_pact_cultist:  'art/infernalPactCultist.png',
+  burnt_offering:         'art/burntOffering.png',
+  infernal_knight:        'art/infernalKnight.png',
+  feed:                   'art/feed.png',
+  sunder:                 'art/sunder.png',
+  dark_omen:              'art/darkOmen.png',
+  infernal_grunt:         'art/infernalGrunt.png',
+  darkflame_demon:        'art/darklameDemon.png',
+  infernal_ritual:        'art/infernalRitual.png',
+  infernal_sign:          'art/infernalSign.png',
+  wretched_pact_cultist:  'art/wretchedPactCultist.png',
+  forsaken_architect:     'art/forsakenArchitect.png',
+  eater_of_souls:         'art/eaterSouls.png',
+  wretched_communion:     'art/wretchedCommunion.png',
+  dark_echoes:            'art/darkEchoes.png',
+  burial:                 'art/burial.png',
+  wretched_banisher:      'art/wretchedBanisher.png',
+  wretched_knight:        'art/wretchedKnight.png',
+  cast_into_the_pit:      'art/castIntoPit.png',
+  wretched_dominance:     'art/wretchedDominance.png',
+  corrupted_knowledge:    'art/corruptedKnowledge.png',
+  stolen_essence:         'art/stolenEssence.png',
+  void_gaze:              'art/voidGaze.png',
+  cast_into_void:         'art/castIntoVoid.png',
+  forbidden_knowledge:    'art/forbiddenKnowledge.png',
+  ripped_from_time:       'art/rippedFromTime.png',
+  void_strike:            'art/voidStrike.png',
+  forbidden_spiral:       'art/forbiddenSpiral.png',
+  dimensional_shift:      'art/dimensionalShift.png',
+  reconstitute:           'art/reconstitute.png',
+  dimensional_hourglass:  'art/dimensionalHourglass.png',
+  corrupt_chalice:        'art/corruptChalice.png',
+  obelisk:                'art/obelisk.png',
+  ritual_dagger:          'art/ritualDagger.png',
+  seeker_orb:             'art/seekerOrb.png',
+  warped_simulacra:       'art/warpedSimulacra.png',
+};
+
+// ── CARD DEFINITIONS ──────────────────────────────────────────────────────────
+const CARDS = {
+  gilded_pact_cultist:{id:'gilded_pact_cultist',name:'Gilded Pact Cultist',type:'Minion',faction:'gilded',cost:1,life:1,
+    rulesText:'<b>ETB:</b> Draw 1, discard 1.',
+    etb(gs,p){drawN(gs,p,1);pickDiscard(gs,p,1);}},
+
+  chosen_sacrifice:{id:'chosen_sacrifice',name:'Chosen Sacrifice',type:'Minion',faction:'gilded',cost:2,life:4,
+    rulesText:'When this minion dies, <b>draw 2</b>.',
+    onDeath(gs,p){drawN(gs,p,2);log(pn(p)+' Chosen Sacrifice — draw 2.',p);}},
+
+  gilded_knight:{id:'gilded_knight',name:'Gilded Knight',type:'Minion',faction:'gilded',cost:5,life:3,
+    rulesText:'When any minion dies, draw 1. (Including this one.)'},
+
+  gilded_ritual:{id:'gilded_ritual',name:'Gilded Ritual',type:'Action',faction:'gilded',cost:4,
+    rulesText:'<b>Sacrifice</b> any number of minions. Draw that many cards.',
+    play(gs,p){pickSacrificeForDraw(gs,p);}},
+
+  seek_the_worthy:{id:'seek_the_worthy',name:'Seek the Worthy',type:'Action',faction:'gilded',cost:3,
+    rulesText:'Draw 2, discard 1.',
+    play(gs,p){drawN(gs,p,2);pickDiscard(gs,p,1);}},
+
+  oblique_pact_cultist:{id:'oblique_pact_cultist',name:'Oblique Pact Cultist',type:'Minion',faction:'oblique',cost:1,life:1,
+    rulesText:'<b>ETB:</b> Look at top 2 cards. Take 1, return 1 to top.',
+    etb(gs,p){pickScry(gs,p,2,1);}},
+
+  spy:{id:'spy',name:'Spy',type:'Action',faction:'oblique',cost:2,
+    rulesText:"Look at opponent's hand. Draw 1.",
+    play(gs,p){
+      var o=opp(p);
+      log(pn(p)+' plays Spy — looks at '+pn(o)+"'s hand.",p);
+      showReveal(pn(o).toUpperCase()+"'S HAND",gs[o].hand,'Opponent has no cards in hand.');
+      drawN(gs,p,1);
+    }},
+
+  lead_astray:{id:'lead_astray',name:'Lead Astray',type:'Action',faction:'oblique',cost:2,
+    rulesText:"Return a minion to owner's hand. If not oblique, draw 1.",
+    play(gs,p,refund){pickReturnMinion(gs,p,refund);}},
+
+  temporal_rift:{id:'temporal_rift',name:'Temporal Rift',type:'Action',faction:'oblique',cost:3,
+    rulesText:'Look at top 3 cards. Take 1, return rest to top.',
+    play(gs,p){pickScry(gs,p,3,1);}},
+
+  infernal_pact_cultist:{id:'infernal_pact_cultist',name:'Infernal Pact Cultist',type:'Minion',faction:'infernal',cost:1,life:1,
+    rulesText:"<b>ETB:</b> Draw 1 and deal 1 damage to an opponent's minion.",
+    etb(gs,p){drawN(gs,p,1);pickDamageMinion(gs,p,1);}},
+
+  burnt_offering:{id:'burnt_offering',name:'Burnt Offering',type:'Action',faction:'infernal',cost:2,
+    rulesText:'Each player discards a card. Draw 1.',
+    play(gs,p){
+      log(pn(p)+' plays Burnt Offering — each player discards 1, then you draw 1.',p);
+      pickDiscard(gs,p,1,function(){
+        pickDiscardForOpponent(gs,p,1,function(){
+          drawN(gs,p,1);renderAll();
+        });
+      });
+    }},
+
+  infernal_knight:{id:'infernal_knight',name:'Infernal Knight',type:'Minion',faction:'infernal',cost:2,life:2,
+    rulesText:'When you discard a card, gain 1 Essence.',passive:true},
+
+  feed:{id:'feed',name:'Feed',type:'Action',faction:'infernal',cost:3,
+    rulesText:'Discard 1 card. Draw 2.',
+    play(gs,p){pickDiscard(gs,p,1);drawN(gs,p,2);log(`${pn(p)} Feed.`,p);}},
+
+  sunder:{id:'sunder',name:'Sunder',type:'Action',faction:'infernal',cost:4,
+    rulesText:'Deal 2 damage to all minions.',
+    play(gs,p){['p1','p2'].forEach(pl=>{[...gs[pl].bf.minions].forEach(id=>damageMinion(gs,pl,id,2));});log(`${pn(p)} Sunder — 2 damage to all minions.`,p);}},
+
+  wretched_pact_cultist:{id:'wretched_pact_cultist',name:'Wretched Pact Cultist',type:'Minion',faction:'wretched',cost:1,life:2,
+    rulesText:'<b>ETB:</b> If you control more minions than opponent, draw 1.',
+    etb(gs,p){if(gs[p].bf.minions.length>gs[opp(p)].bf.minions.length){drawN(gs,p,1);log(`${pn(p)} Wretched Pact Cultist — more minions, draw 1.`,p);}}},
+
+  forsaken_architect:{id:'forsaken_architect',name:'Forsaken Architect',type:'Minion',faction:'wretched',cost:3,life:2,
+    rulesText:'At start of your turn, if you control more minions than opponent, draw 1.',startOfTurn:true},
+
+  eater_of_souls:{id:'eater_of_souls',name:'Eater of Souls',type:'Minion',faction:'wretched',cost:2,life:2,
+    rulesText:"<b>ETB:</b> Banish two cards from opponent's discard.",
+    etb(gs,p){const o=opp(p),n=Math.min(2,gs[o].discard.length);for(let i=0;i<n;i++)gs[o].banish.push(gs[o].discard.pop());log(`${pn(p)} Eater of Souls — banish ${n} from ${pn(o)}'s discard.`,p);}},
+
+  wretched_communion:{id:'wretched_communion',name:'Wretched Communion',type:'Action',faction:'wretched',cost:3,
+    rulesText:'Draw 2, then opponent draws 1.',
+    play(gs,p){drawN(gs,p,2);drawN(gs,opp(p),1);log(`${pn(p)} Wretched Communion.`,p);}},
+
+  corrupted_knowledge:{id:'corrupted_knowledge',name:'Corrupted Knowledge',type:'Forbidden Action',faction:'forbidden',sanityCost:1,
+    rulesText:'Draw 1.',
+    play(gs,p){drawN(gs,p,1);log(`${pn(p)} Corrupted Knowledge — draw 1. (-1 Sanity)`,p);}},
+
+  stolen_essence:{id:'stolen_essence',name:'Stolen Essence',type:'Forbidden Action',faction:'forbidden',sanityCost:1,
+    rulesText:'Gain 2 Essence.',
+    play(gs,p){gs[p].essPool+=2;log(`${pn(p)} Stolen Essence — +2 Essence. (-1 Sanity)`,p);renderStats();}},
+
+  void_gaze:{id:'void_gaze',name:'Void Gaze',type:'Forbidden Action',faction:'forbidden',sanityCost:3,
+    rulesText:'Draw 2.',
+    play(gs,p){drawN(gs,p,2);log(`${pn(p)} Void Gaze — draw 2. (-3 Sanity)`,p);}},
+
+  cast_into_void:{id:'cast_into_void',name:'Cast Into the Void',type:'Forbidden Action',faction:'forbidden',sanityCost:2,
+    rulesText:'<b>Banish</b> target Minion.',
+    play(gs,p,refund){pickBanishMinion(gs,p,refund);}},
+
+  forbidden_knowledge:{id:'forbidden_knowledge',name:'Forbidden Knowledge',type:'Forbidden Action',faction:'forbidden',sanityCost:1,
+    rulesText:'<b>Banish</b> two cards from your hand, then draw 2.',
+    play(gs,p){
+      const n=Math.min(2,gs[p].hand.length);
+      log(`${pn(p)} Forbidden Knowledge — banish ${n} from hand, draw 2. (-1 Sanity)`,p);
+      if(n===0){drawN(gs,p,2);return;}
+      pickBanishFromHand(gs,p,n,function(){drawN(gs,p,2);renderAll();});
+    }},
+
+  dimensional_hourglass:{id:'dimensional_hourglass',name:'Dimensional Hourglass',type:'Device',faction:'device',cost:2,
+    rulesText:'<b>Deplete</b> + pay 2 Essence: Draw 1.',
+    deplete(gs,p){
+      if(gs[p].essPool<2){log('Not enough Essence for Hourglass.','warn');return false;}
+      gs[p].essPool-=2;drawN(gs,p,1);
+      log(`${pn(p)} Dimensional Hourglass — pay 2, draw 1.`,p);return true;}},
+
+  corrupt_chalice:{id:'corrupt_chalice',name:'Corrupt Chalice',type:'Device',faction:'device',cost:4,
+    rulesText:'<b>Sacrifice</b> this device: Deal 3 damage to a minion.',
+    sacrifice(gs,p){pickDamageMinion(gs,p,3);}},
+
+  obelisk:{id:'obelisk',name:'Obelisk',type:'Device',faction:'device',cost:3,
+    rulesText:'At start of your turn, gain 1 Essence + 1 per other Obelisk you control.',
+    startOfTurn:true,passive:true},
+};
+
+// ── DECK ─────────────────────────────────────────────────────────────────────
+function buildDeck(){
+  return shuffle([
+    'gilded_pact_cultist','gilded_pact_cultist','gilded_pact_cultist',
+    'chosen_sacrifice','chosen_sacrifice','gilded_knight',
+    'seek_the_worthy','seek_the_worthy','gilded_ritual',
+    'oblique_pact_cultist','oblique_pact_cultist','spy','spy','temporal_rift',
+    'infernal_pact_cultist','infernal_pact_cultist','burnt_offering','burnt_offering','infernal_knight','feed',
+    'wretched_pact_cultist','wretched_pact_cultist','wretched_pact_cultist','forsaken_architect','wretched_communion',
+    'corrupted_knowledge','corrupted_knowledge','corrupted_knowledge',
+    'stolen_essence','stolen_essence','void_gaze',
+    'forbidden_knowledge','forbidden_knowledge',
+    'dimensional_hourglass','dimensional_hourglass','corrupt_chalice',
+    'obelisk','obelisk','obelisk',
+    'sunder','lead_astray','eater_of_souls','cast_into_void',
+  ]);
+}
+
+// ── GAME STATE ────────────────────────────────────────────────────────────────
+let GS = null;
+let essMode = false;
+
+function mkPlayer(){
+  return {
+    sanity:10, maxSanity:10, essPool:0, essCardPlayed:false,
+    deck:buildDeck(), hand:[], discard:[], banish:[],
+    bf:{ essTokens:[], minions:[], minionData:{}, devices:[], deviceData:{} }
+  };
+}
+
+function initGame(){
+  GS={turn:1,active:'p1',phase:'main',p1:mkPlayer(),p2:mkPlayer()};
+  essMode=false;
+  closePicker();
+  document.getElementById('pass-screen').classList.remove('open');
+  document.getElementById('end-screen').classList.remove('open');
+  document.getElementById('log').innerHTML='';
+  log('The ritual begins. Both players draw opening hands.','sys');
+  drawToFive(GS,'p1');
+  drawToFive(GS,'p2');
+  renderAll();
+  refreshBtns();
+}
+
+// ── HELPERS ───────────────────────────────────────────────────────────────────
+function shuffle(a){const b=[...a];for(let i=b.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[b[i],b[j]]=[b[j],b[i]];}return b;}
+function opp(p){return p==='p1'?'p2':'p1';}
+function pn(p){return p==='p1'?'Player 1':'Player 2';}
+function C(id){return CARDS[id]||null;}
+
+// ── DRAW ──────────────────────────────────────────────────────────────────────
+function drawN(gs,p,n){
+  for(let i=0;i<n;i++){
+    if(gs[p].deck.length===0){triggerWin(gs,p);return;}
+    gs[p].hand.push(gs[p].deck.shift());
+  }
+  renderStats();renderHand(gs);
+}
+function drawToFive(gs,p){
+  const need=Math.max(0,5-gs[p].hand.length);
+  for(let i=0;i<need;i++){
+    if(gs[p].deck.length===0){triggerWin(gs,p);return;}
+    gs[p].hand.push(gs[p].deck.shift());
+  }
+}
+
+// ── PLAY CARD ─────────────────────────────────────────────────────────────────
+function playCard(gs,p,idx){
+  const id=gs[p].hand[idx];
+  const c=C(id);
+  if(!c)return;
+
+  if(essMode){
+    if(c.type==='Device'||c.type==='Forbidden Action'){log('Cannot play as Essence.','warn');return;}
+    if(gs[p].essCardPlayed){log('Already played an Essence card this turn.','warn');return;}
+    gs[p].hand.splice(idx,1);
+    gs[p].essCardPlayed=true;
+    gs[p].bf.essTokens.push({});          // token is just a counter now, no depleted state
+    gs[p].essPool++;                       // immediately gain 1 Essence from the new source
+    log(pn(p)+' plays '+c.name+' as Essence. Gains 1 Essence immediately (+1 source for future turns).',p);
+    essMode=false;renderAll();refreshBtns();return;
+  }
+
+  if(c.type==='Forbidden Action'){
+    const cost=c.sanityCost||0;
+    if(gs[p].sanity<cost){log(`Not enough Sanity for ${c.name}.`,'warn');return;}
+    gs[p].sanity-=cost;
+    gs[p].hand.splice(idx,1);gs[p].discard.push(id);
+    log(`${pn(p)} plays ${c.name} (${cost} Sanity).`,p);
+    function forbiddenRefund(){
+      var di=gs[p].discard.lastIndexOf(id);
+      if(di!==-1)gs[p].discard.splice(di,1);
+      gs[p].hand.splice(idx,0,id);
+      gs[p].sanity+=cost;
+      log(pn(p)+' cancels '+c.name+' — returned to hand, Sanity restored.','sys');
+      renderAll();refreshBtns();
+    }
+    if(c.play)c.play(gs,p,forbiddenRefund);
+    checkSanity(gs,p);renderAll();refreshBtns();return;
+  }
+
+  const cost=c.cost||0;
+  if(gs[p].essPool<cost){log(`Need ${cost} Essence for ${c.name}, have ${gs[p].essPool}.`,'warn');return;}
+  gs[p].essPool-=cost;
+  gs[p].hand.splice(idx,1);
+
+  // Refund function — restores card and essence if a cancelable picker is cancelled
+  function refund(){
+    // Remove from discard if it was put there (action cards)
+    var di=gs[p].discard.lastIndexOf(id);
+    if(di!==-1) gs[p].discard.splice(di,1);
+    gs[p].hand.splice(idx,0,id);
+    gs[p].essPool+=cost;
+    log(pn(p)+' cancels '+c.name+' — returned to hand.','sys');
+    renderAll();refreshBtns();
+  }
+
+  if(c.type==='Minion'){
+    gs[p].bf.minions.push(id);
+    gs[p].bf.minionData[id]={life:c.life,fresh:true};
+    log(`${pn(p)} plays ${c.name} (${cost} Ess). ETB triggers.`,p);
+    if(c.etb)c.etb(gs,p);
+  } else if(c.type==='Device'){
+    gs[p].bf.devices.push(id);
+    gs[p].bf.deviceData[id]={depleted:false};
+    log(`${pn(p)} plays ${c.name} (${cost} Ess).`,p);
+  } else {
+    gs[p].discard.push(id);
+    log(`${pn(p)} plays ${c.name} (${cost} Ess).`,p);
+    if(c.play)c.play(gs,p,refund);
+  }
+  renderAll();refreshBtns();
+}
+
+// ── SACRIFICE / DAMAGE / DESTROY ──────────────────────────────────────────────
+function sacrificeMinion(gs,p,id,forEss){
+  const bf=gs[p].bf, data=bf.minionData[id];
+  if(!data)return false;
+  if(data.fresh){log('Cannot sacrifice a minion the turn it entered.','warn');return false;}
+  bf.minions.splice(bf.minions.indexOf(id),1);
+  delete bf.minionData[id];
+  gs[p].discard.push(id);
+  if(forEss){gs[p].essPool++;log(`${pn(p)} sacrifices ${C(id)?.name||id} for 1 Essence.`,p);infKnightCheck(gs,p);}
+  fireDeathTriggers(gs,p,id);
+  renderBF(gs,p);renderStats();
+  return true;
+}
+
+function damageMinion(gs,p,id,amt){
+  const data=gs[p].bf.minionData[id];
+  if(!data)return;
+  data.life-=amt;
+  log(`${pn(p)}'s ${C(id)?.name||id} takes ${amt} damage (${data.life} left).`,'sys');
+  if(data.life<=0)destroyMinion(gs,p,id);
+  else renderBF(gs,p);
+}
+
+function destroyMinion(gs,p,id){
+  const bf=gs[p].bf, idx=bf.minions.indexOf(id);
+  if(idx===-1)return;
+  bf.minions.splice(idx,1);delete bf.minionData[id];gs[p].discard.push(id);
+  log(`${pn(p)}'s ${C(id)?.name||id} is destroyed.`,'sys');
+  fireDeathTriggers(gs,p,id);
+  renderBF(gs,p);renderStats();
+}
+
+function fireDeathTriggers(gs,p,id){
+  const c=C(id);if(c&&c.onDeath)c.onDeath(gs,p);
+  ['p1','p2'].forEach(pl=>{
+    gs[pl].bf.minions.forEach(mid=>{
+      if(mid==='gilded_knight'){drawN(gs,pl,1);log(`${pn(pl)} Gilded Knight — draw 1.`,pl);}
+    });
+  });
+}
+
+function infKnightCheck(gs,p){
+  if(gs[p].bf.minions.includes('infernal_knight')){gs[p].essPool++;log(`${pn(p)} Infernal Knight — +1 Essence.`,p);}
+}
+
+// ── DEVICE ACTIVATION ─────────────────────────────────────────────────────────
+function activateDevice(gs,p,id){
+  const c=C(id), dd=gs[p].bf.deviceData[id];
+  if(!c||!dd)return;
+  if(c.deplete){
+    if(dd.depleted){log(c.name+' already depleted.','warn');return;}
+    const ok=c.deplete(gs,p);
+    if(ok){dd.depleted=true;renderAll();refreshBtns();}
+  } else if(c.sacrifice){
+    c.sacrifice(gs,p);
+    gs[p].bf.devices.splice(gs[p].bf.devices.indexOf(id),1);
+    delete gs[p].bf.deviceData[id];
+    gs[p].discard.push(id);
+    log(pn(p)+' sacrifices '+c.name+'.',p);
+    renderAll();refreshBtns();
+  }
+}
+
+// ── AUTO DISCARD ──────────────────────────────────────────────────────────────
+function autoDiscard(gs,p,n){
+  const count=Math.min(n,gs[p].hand.length);
+  for(let i=0;i<count;i++){const id=gs[p].hand.pop();gs[p].discard.push(id);infKnightCheck(gs,p);}
+  if(count>0)log(`${pn(p)} discards ${count} card(s).`,p);
+  renderStats();renderHand(gs);
+}
+
+// Shows a pass-screen then opens a discard picker for the non-active player,
+// calls afterCb() when done and shows another pass-screen back to the active player.
+function pickDiscardForOpponent(gs,p,n,afterCb){
+  const o=opp(p);
+  if(gs[o].hand.length===0){
+    log(pn(o)+' has no cards to discard.','sys');
+    if(afterCb)afterCb();
+    return;
+  }
+  const passBack=document.getElementById('pass-screen');
+  document.getElementById('pass-title').textContent='PASS TO '+pn(o).toUpperCase();
+  document.getElementById('pass-sub').textContent=pn(o)+' must discard '+n+' card'+(n>1?'s':'')+'.';
+  const btn=document.querySelector('#pass-screen button');
+  const origOnclick=btn.onclick;
+  btn.onclick=function(){
+    passBack.classList.remove('open');
+    var need=Math.min(n,gs[o].hand.length);
+    var items=gs[o].hand.map(function(id){return{cardId:id,label:C(id)?C(id).name:id};});
+    openPicker(
+      pn(o).toUpperCase()+' — DISCARD',
+      'Choose '+need+' card'+(need>1?'s':'')+' to discard.',
+      items,
+      function(item){
+        const idx=gs[o].hand.indexOf(item.cardId);
+        if(idx===-1)return;
+        gs[o].hand.splice(idx,1);
+        gs[o].discard.push(item.cardId);
+        log(pn(o)+' discards '+(C(item.cardId)?C(item.cardId).name:item.cardId)+'.',o);
+        infKnightCheck(gs,o);
+        renderStats();
+      },
+      {
+        cancelable:false,
+        minSelect: need,
+        doneLabel: 'DISCARD',
+        onDone: function(){
+          // Pass back to active player
+          document.getElementById('pass-title').textContent='PASS BACK TO '+pn(p).toUpperCase();
+          document.getElementById('pass-sub').textContent='Hand back to '+pn(p)+' to continue.';
+          btn.onclick=function(){
+            passBack.classList.remove('open');
+            btn.onclick=origOnclick;
+            if(afterCb)afterCb();
+          };
+          passBack.classList.add('open');
+        }
+      }
+    );
+  };
+  passBack.classList.add('open');
+}
+
+// ── TURN MANAGEMENT ───────────────────────────────────────────────────────────
+function endTurn(){
+  if(GS.phase!=='main')return;
+  essMode=false;closePicker();
+  log(`${pn(GS.active)} ends their turn.`,'sys');
+  const bf=GS[GS.active].bf;
+  bf.minions.forEach(id=>{if(bf.minionData[id])bf.minionData[id].fresh=false;});
+  GS.active=opp(GS.active);GS.turn++;
+  showPassScreen(GS.active);
+}
+
+function showPassScreen(p){
+  document.getElementById('pass-title').textContent=`PASS TO ${pn(p).toUpperCase()}`;
+  document.getElementById('pass-sub').textContent=`${pn(p)}'s turn is about to begin. Hand the device over.`;
+  document.getElementById('pass-screen').classList.add('open');
+}
+
+function confirmPass(){
+  document.getElementById('pass-screen').classList.remove('open');
+  startTurn(GS,GS.active);
+}
+
+function startTurn(gs,p){
+  const ps=gs[p];
+  Object.values(ps.bf.deviceData).forEach(d=>d.depleted=false);
+  ps.essCardPlayed=false;
+  // Essence pool resets to number of Essence sources controlled
+  ps.essPool=ps.bf.essTokens.length;
+  if(ps.essPool>0) log(`${pn(p)} starts with ${ps.essPool} Essence (${ps.essPool} source${ps.essPool!==1?'s':''}).`,p);
+  // Obelisk income
+  const obs=ps.bf.devices.filter(id=>id==='obelisk').length;
+  if(obs>0){ps.essPool+=obs;log(`${pn(p)}: ${obs} Obelisk(s) — +${obs} Essence.`,p);}
+  // Forsaken Architect
+  if(ps.bf.minions.includes('forsaken_architect')&&ps.bf.minions.length>gs[opp(p)].bf.minions.length){
+    drawN(gs,p,1);log(`${pn(p)} Forsaken Architect — more minions, draw 1.`,p);
+  }
+  drawToFive(gs,p);
+  if(gs.phase==='over')return;
+  log(`— Turn ${gs.turn}: ${pn(p)}'s turn —`,'sys');
+  renderAll();refreshBtns();
+}
+
+// ── WIN / LOSE ────────────────────────────────────────────────────────────────
+function triggerWin(gs,p){
+  gs.phase='over';
+  log(`⭐ ${pn(p)}'s deck is empty — the ritual is complete!`,'win');
+  document.getElementById('end-title').textContent='RITUAL COMPLETE';
+  document.getElementById('end-title').className='end-title win';
+  document.getElementById('end-sub').textContent=`${pn(p)} has completed the ritual!`;
+  document.getElementById('end-screen').classList.add('open');
+}
+
+function checkSanity(gs,p){
+  if(gs[p].sanity<=0){
+    gs[p].sanity=0;gs.phase='over';
+    log(`${pn(p)}'s sanity collapses!`,'warn');
+    document.getElementById('end-title').textContent=`${pn(p).toUpperCase()} FALLS`;
+    document.getElementById('end-title').className='end-title lose';
+    document.getElementById('end-sub').textContent=`${pn(p)} reached 0 Sanity.`;
+    document.getElementById('end-screen').classList.add('open');
+  }
+}
+
+// ── PICKER MODAL ──────────────────────────────────────────────────────────────
+let PKR=null;
+
+function openPicker(title,desc,items,onPick,opts){
+  opts=opts||{};
+  PKR={
+    title, desc,
+    items: items.map(function(it){ return Object.assign({},it,{selected:false}); }),
+    onPick,
+    cancelable: opts.cancelable!==false,
+    doneLabel:  opts.doneLabel||'CONFIRM',
+    onDone:     opts.onDone||null,
+    onCancel:   opts.onCancel||null,
+    // How many must be selected before confirm enables (0 = always enabled, e.g. Gilded Ritual)
+    minSelect:  opts.minSelect!==undefined ? opts.minSelect : 1,
+  };
+  document.getElementById('pkr-title').textContent=title;
+  document.getElementById('pkr-desc').textContent=desc;
+  document.getElementById('pkr-done').style.display='inline-block';
+  document.getElementById('pkr-done').textContent=PKR.doneLabel;
+  document.getElementById('pkr-done').disabled=true;
+  document.getElementById('pkr-cancel').style.display=PKR.cancelable?'inline-block':'none';
+  renderPkrCards();
+  document.getElementById('picker-bg').classList.add('open');
+}
+
+function renderPkrCards(){
+  const ct=document.getElementById('pkr-cards');
+  ct.innerHTML='';
+  if(!PKR)return;
+
+  PKR.items.forEach(function(item,i){
+    const c=C(item.cardId);
+    const wrap=document.createElement('div');
+    wrap.style.cssText='display:flex;flex-direction:column;align-items:center;gap:4px;cursor:pointer';
+
+    // Owner label
+    if(item.owner){
+      const isYou=(item.owner===GS.active);
+      const lbl=document.createElement('div');
+      lbl.textContent=isYou?'YOUR MINION':"OPPONENT'S";
+      lbl.style.cssText=[
+        "font-family:'Rajdhani',sans-serif",
+        'font-size:7px','letter-spacing:1.5px',
+        'padding:3px 8px','border-radius:3px','white-space:nowrap',
+        isYou
+          ? 'background:rgba(106,58,224,0.25);color:#9060ff;border:1px solid rgba(106,58,224,0.4)'
+          : 'background:rgba(184,40,56,0.25);color:#e04858;border:1px solid rgba(184,40,56,0.4)',
+      ].join(';');
+      wrap.appendChild(lbl);
+    }
+
+    // Card element
+    const card=document.createElement('div');
+    const faction=c?c.faction:'device';
+    card.className='card pkr-card f-'+faction+(item.selected?' pkr-selected':'');
+    card.innerHTML=c
+      ? buildCardHTML(c, item.life!==undefined?item.life:null)
+      : '<div class="card-name">'+(item.label||'?')+'</div>';
+
+    wrap.appendChild(card);
+    wrap.addEventListener('click',function(){ pickerToggle(i); });
+    ct.appendChild(wrap);
+  });
+
+  // Update confirm button state
+  var sel=PKR.items.filter(function(it){return it.selected;}).length;
+  var btn=document.getElementById('pkr-done');
+  btn.disabled=(sel < PKR.minSelect);
+  // Update label with count if >1 needed
+  if(PKR.minSelect>0){
+    btn.textContent=sel>0
+      ? PKR.doneLabel+' ('+sel+')'
+      : PKR.doneLabel;
+  }
+}
+
+function pickerToggle(i){
+  if(!PKR)return;
+  PKR.items[i].selected=!PKR.items[i].selected;
+  renderPkrCards();
+}
+
+function pickerDone(){
+  if(!PKR)return;
+  var selected=PKR.items.filter(function(it){return it.selected;});
+  if(selected.length < PKR.minSelect) return; // guard
+  var cb=PKR.onDone;
+  var onPick=PKR.onPick;
+  closePicker();
+  // Fire onPick for each selected item in order
+  selected.forEach(function(item){ onPick(item); });
+  if(cb) cb(selected);
+}
+
+function pickerCancel(){
+  var cb=PKR?PKR.onCancel:null;
+  closePicker();
+  if(cb)cb();
+}
+
+function closePicker(){
+  PKR=null;
+  document.getElementById('picker-bg').classList.remove('open');
+}
+
+// ── REVEAL MODAL (read-only, e.g. Spy) ───────────────────────────────────────
+function showReveal(title, cardIds, emptyMsg) {
+  var items = cardIds.map(function(id){ return {cardId:id, label:C(id)?C(id).name:id}; });
+  document.getElementById('pkr-title').textContent = title;
+  if(items.length === 0) {
+    document.getElementById('pkr-desc').textContent = emptyMsg || 'No cards.';
+    document.getElementById('pkr-cards').innerHTML = '';
+  } else {
+    document.getElementById('pkr-desc').textContent = cardIds.length + ' card' + (cardIds.length !== 1 ? 's' : '') + ' in hand.';
+    var ct = document.getElementById('pkr-cards');
+    ct.innerHTML = '';
+    items.forEach(function(item){
+      var c = C(item.cardId);
+      var el = document.createElement('div');
+      el.className = 'card f-' + (c ? c.faction : 'device');
+      el.innerHTML = c ? buildCardHTML(c) : '<div class="card-name">'+item.label+'</div>';
+      ct.appendChild(el);
+    });
+  }
+  // Done button only, no cancel, no pick handler
+  var doneBtn=document.getElementById('pkr-done');
+  doneBtn.style.display='inline-block';
+  doneBtn.textContent='DONE';
+  doneBtn.disabled=false;
+  document.getElementById('pkr-cancel').style.display='none';
+  PKR={ onDone:null, onCancel:null, cancelable:false, minSelect:0, items:[], onPick:function(){} };
+  document.getElementById('picker-bg').classList.add('open');
+}
+
+// ── PICK FLOWS ────────────────────────────────────────────────────────────────
+
+function pickDiscard(gs,p,n,afterCb){
+  if(gs[p].hand.length===0){if(afterCb)afterCb();return;}
+  if(p!==gs.active){autoDiscard(gs,p,n);if(afterCb)afterCb();return;}
+  var items=gs[p].hand.map(function(id){return{cardId:id,label:C(id)?C(id).name:id};});
+  var need=Math.min(n,items.length);
+  openPicker(
+    'DISCARD A CARD',
+    'Choose '+need+' card'+(need>1?'s':'')+' to discard.',
+    items,
+    function(item){
+      var idx=gs[p].hand.indexOf(item.cardId);
+      if(idx===-1)return;
+      gs[p].hand.splice(idx,1);gs[p].discard.push(item.cardId);
+      log(pn(p)+' discards '+(C(item.cardId)?C(item.cardId).name:item.cardId)+'.',p);
+      infKnightCheck(gs,p);renderStats();
+    },
+    {cancelable:false, minSelect:need, doneLabel:'DISCARD', onDone:function(){ if(afterCb)afterCb(); else renderAll(); }}
+  );
+}
+
+function pickBanishFromHand(gs,p,n,afterCb){
+  if(gs[p].hand.length===0){if(afterCb)afterCb();return;}
+  var items=gs[p].hand.map(function(id){return{cardId:id,label:C(id)?C(id).name:id};});
+  var need=Math.min(n,items.length);
+  openPicker(
+    'BANISH FROM HAND',
+    'Choose '+need+' card'+(need>1?'s':'')+' to banish.',
+    items,
+    function(item){
+      var idx=gs[p].hand.indexOf(item.cardId);
+      if(idx===-1)return;
+      gs[p].hand.splice(idx,1);gs[p].banish.push(item.cardId);
+      log(pn(p)+' banishes '+(C(item.cardId)?C(item.cardId).name:item.cardId)+'.',p);
+      renderStats();
+    },
+    {cancelable:false, minSelect:need, doneLabel:'BANISH', onDone:function(){ if(afterCb)afterCb(); else renderAll(); }}
+  );
+}
+
+function pickBanishMinion(gs,p,refund){
+  var items=[];
+  ['p1','p2'].forEach(function(pl){
+    gs[pl].bf.minions.forEach(function(id){
+      var d=gs[pl].bf.minionData[id];
+      items.push({cardId:id,label:C(id)?C(id).name:id,owner:pl,life:d?d.life:null});
+    });
+  });
+  if(items.length===0){
+    log('No minions to banish.','warn');
+    if(refund) refund(); else renderAll();
+    return;
+  }
+  openPicker('BANISH A MINION','Choose a minion to banish permanently.',items,
+    function(item){
+      var pl=item.owner,bf=gs[pl].bf,idx=bf.minions.indexOf(item.cardId);
+      if(idx!==-1){bf.minions.splice(idx,1);delete bf.minionData[item.cardId];}
+      gs[pl].banish.push(item.cardId);
+      log((C(item.cardId)?C(item.cardId).name:item.cardId)+' is banished!',p);
+      renderAll();
+    },
+    {cancelable:true, minSelect:1, doneLabel:'BANISH', onCancel:refund||function(){renderAll();}}
+  );
+}
+
+function pickDamageMinion(gs,p,amt){
+  var o=opp(p);
+  var items=gs[o].bf.minions.map(function(id){
+    var d=gs[o].bf.minionData[id];
+    return {cardId:id,label:C(id)?C(id).name:id,owner:o,life:d?d.life:null};
+  });
+  if(items.length===0){log('No opponent minions to target.','sys');return;}
+  openPicker('TARGET A MINION','Choose an opponent\'s minion to deal '+amt+' damage to.',items,
+    function(item){damageMinion(gs,item.owner,item.cardId,amt);renderAll();},
+    {cancelable:true, minSelect:1, doneLabel:'DEAL '+amt+' DAMAGE'}
+  );
+}
+
+function pickReturnMinion(gs,p,refund){
+  var items=[];
+  ['p1','p2'].forEach(function(pl){
+    gs[pl].bf.minions.forEach(function(id){
+      var d=gs[pl].bf.minionData[id];
+      items.push({cardId:id,label:C(id)?C(id).name:id,owner:pl,life:d?d.life:null});
+    });
+  });
+  if(items.length===0){
+    log('No minions to return.','warn');
+    if(refund) refund(); else renderAll();
+    return;
+  }
+  openPicker('RETURN A MINION',"Choose a minion to return to its owner's hand.",items,
+    function(item){
+      var pl=item.owner,bf=gs[pl].bf,idx=bf.minions.indexOf(item.cardId);
+      if(idx!==-1){bf.minions.splice(idx,1);delete bf.minionData[item.cardId];}
+      gs[pl].hand.push(item.cardId);
+      log((C(item.cardId)?C(item.cardId).name:item.cardId)+' returned to '+pn(pl)+"'s hand.",p);
+      if(C(item.cardId)&&C(item.cardId).faction!=='oblique'){drawN(gs,p,1);log('Lead Astray — not oblique, '+pn(p)+' draws 1.',p);}
+      renderAll();
+    },
+    {cancelable:true, minSelect:1, doneLabel:'RETURN', onCancel:refund||function(){renderAll();}}
+  );
+}
+
+function pickScry(gs,p,n,keep){
+  var ps=gs[p],revealed=[];
+  for(var i=0;i<Math.min(n,ps.deck.length);i++) revealed.push(ps.deck.shift());
+  if(revealed.length===0){log(pn(p)+' looks at top — deck empty.',p);return;}
+  var toKeep=Math.min(keep,revealed.length);
+  var items=revealed.map(function(id){return{cardId:id,label:C(id)?C(id).name:id};});
+  openPicker(
+    'TOP '+revealed.length+' CARD'+(revealed.length>1?'S':''),
+    'Choose '+toKeep+' card'+(toKeep>1?'s':'')+' to take into your hand. The rest go back on top.',
+    items,
+    function(item){
+      var idx=revealed.indexOf(item.cardId);
+      if(idx!==-1) revealed.splice(idx,1);
+      ps.hand.push(item.cardId);
+      log(pn(p)+' takes '+(C(item.cardId)?C(item.cardId).name:item.cardId)+' into hand.',p);
+      renderStats();
+    },
+    {
+      cancelable:false,
+      minSelect: toKeep,
+      doneLabel: 'TAKE '+toKeep+' CARD'+(toKeep>1?'S':''),
+      onDone: function(){
+        // Whatever wasn't taken goes back on top
+        revealed.forEach(function(id){ ps.deck.unshift(id); });
+        log(pn(p)+' returns '+revealed.length+' card'+(revealed.length!==1?'s':'')+' to top of deck.',p);
+        renderAll();
+      }
+    }
+  );
+}
+
+function pickSacrificeForDraw(gs,p){
+  var sacrificed=0;
+
+  function getEligible(){
+    return gs[p].bf.minions
+      .filter(function(id){ return gs[p].bf.minionData[id] && !gs[p].bf.minionData[id].fresh; })
+      .map(function(id){ var d=gs[p].bf.minionData[id]; return {cardId:id, label:C(id)?C(id).name:id, life:d?d.life:null}; });
+  }
+
+  function finish(){
+    if(sacrificed>0){ drawN(gs,p,sacrificed); log(pn(p)+' Gilded Ritual — drew '+sacrificed+' card(s).',p); }
+    else log('Gilded Ritual — no minions sacrificed.','sys');
+    renderAll();
+  }
+
+  function openNext(){
+    var eligible=getEligible();
+    if(eligible.length===0){ finish(); return; }
+
+    openPicker(
+      'GILDED RITUAL',
+      'Tap minions to sacrifice them, then tap CONFIRM to draw that many cards.',
+      eligible,
+      function(item){
+        // Sacrifice inline without renderBF mid-flow
+        var bf=gs[p].bf, id=item.cardId, data=bf.minionData[id];
+        if(!data || data.fresh){ return; }
+        bf.minions.splice(bf.minions.indexOf(id),1);
+        delete bf.minionData[id];
+        gs[p].discard.push(id);
+        log(pn(p)+' sacrifices '+(C(id)?C(id).name:id)+' (Gilded Ritual).',p);
+        fireDeathTriggers(gs,p,id);
+        sacrificed++;
+      },
+      {
+        cancelable:true,
+        minSelect: 0,
+        doneLabel: 'CONFIRM',
+        onDone: function(){ finish(); },
+        onCancel: function(){ finish(); }
+      }
+    );
+    document.getElementById('pkr-done').disabled=false;
+    document.getElementById('pkr-done').textContent='DRAW '+sacrificed+' CARD'+(sacrificed!==1?'S':'');
+  }
+
+  openNext();
+}
+
+// ── ESSENCE MODE TOGGLE ───────────────────────────────────────────────────────
+function toggleEssMode(){
+  var p=GS.active;
+  if(GS[p].essCardPlayed){log('Already played an Essence card this turn.','warn');return;}
+  essMode=!essMode;
+  renderHand(GS);refreshBtns();
+}
+
+// ── RENDER ────────────────────────────────────────────────────────────────────
+function renderAll(){
+  renderStats();renderBF(GS,'p1');renderBF(GS,'p2');renderHand(GS);renderTurnLine();renderActionPanel(GS);
+}
+
+function renderTurnLine(){
+  var active=GS.active;
+  document.getElementById('turn-badge').textContent='TURN '+GS.turn;
+  document.getElementById('turn-line').textContent=
+    active==='p1' ? '✦ YOUR TURN ✦' : '✦ '+pn(active).toUpperCase()+"'S TURN ✦";
+  document.getElementById('hand-count').textContent=GS[active].hand.length+' card'+(GS[active].hand.length!==1?'s':'');
+  // Swap battlefield labels based on who is active
+  var myName=pn(active), oppName=pn(opp(active));
+  document.getElementById('opp-name').textContent=oppName.toUpperCase();
+  // Swap which bf zone shows which player
+  // p1 is always "my" zone, p2 is always "opp" zone — but we relabel them
+  // Actually zones are fixed to p1/p2 elements; the labels just clarify
+}
+
+function renderStats(){
+  // Always show active player in the bottom zone, opponent in top strip
+  var me=GS.active, op=opp(GS.active);
+  var mps=GS[me], ops=GS[op];
+
+  // My stats (bottom ctrl zone) — always uses p1-xxx IDs which map to active player
+  document.getElementById('p1-ess').textContent=mps.essPool;
+  document.getElementById('p1-san').textContent=mps.sanity;
+  document.getElementById('p1-san-bar').style.width=(mps.sanity/mps.maxSanity*100)+'%';
+  document.getElementById('p1-deck').textContent=mps.deck.length;
+  document.getElementById('p1-disc').textContent=mps.discard.length;
+
+  // Opp stats (top strip)
+  document.getElementById('p2-ess').textContent=ops.essPool;
+  document.getElementById('p2-san').textContent=ops.sanity;
+  document.getElementById('p2-san-bar').style.width=(ops.sanity/ops.maxSanity*100)+'%';
+  document.getElementById('p2-deck').textContent=ops.deck.length;
+  document.getElementById('p2-hct').textContent=ops.hand.length;
+
+  // Battlefield essence labels
+  var mySrcs=mps.bf.essTokens.length;
+  var opSrcs=ops.bf.essTokens.length;
+  document.getElementById('p1-esslbl').textContent=mySrcs+' source'+(mySrcs!==1?'s':'')+' → '+mySrcs+' Ess/turn';
+  document.getElementById('p2-esslbl').textContent=opSrcs+' source'+(opSrcs!==1?'s':'')+' → '+opSrcs+' Ess/turn';
+
+  // Hand count
+  document.getElementById('hand-count').textContent=mps.hand.length+' card'+(mps.hand.length!==1?'s':'');
+}
+
+function renderBF(gs,p){
+  // Active player always shows in the my-bf-zone (p1-bf element)
+  // Opponent always shows in opp-bf-zone (p2-bf element)
+  var elId = (p===gs.active) ? 'p1-bf' : 'p2-bf';
+  var ct=document.getElementById(elId);
+  ct.innerHTML='';
+  var ps=gs[p],isActive=(p===gs.active);
+
+  if(ps.bf.essTokens.length > 0){
+    var el=document.createElement('div');
+    el.className='ess-token';
+    el.innerHTML='<div class="ess-glyph">⚗</div>'
+      +'<div class="ess-state">SOURCES</div>'
+      +'<div class="ess-badge">'+ps.bf.essTokens.length+'</div>';
+    ct.appendChild(el);
+  }
+
+  ps.bf.minions.forEach(function(id){
+    var c=C(id),data=ps.bf.minionData[id];
+    if(!c||!data)return;
+    var canSac=(!data.fresh&&isActive&&gs.phase==='main');
+    var isSelected=(selectedMinion===p+':'+id);
+    var el=document.createElement('div');
+    el.className='card bf f-'+c.faction+(canSac?' clickable':'')+(isSelected?' selected-minion':'');
+    el.innerHTML=buildCardHTML(c,data.life);
+
+    if(canSac){
+      el.addEventListener('click',function(e){
+        e.stopPropagation();
+        selectedDevice=null;
+        selectedMinion=(isSelected?null:p+':'+id);
+        renderBF(gs,'p1');renderBF(gs,'p2');
+        renderActionPanel(gs);
+      });
+    }
+    ct.appendChild(el);
+  });
+
+  ps.bf.devices.forEach(function(id){
+    var c=C(id),dd=ps.bf.deviceData[id];
+    if(!c||!dd)return;
+
+    // Can act = active player, main phase, not depleted, has an action defined
+    var hasAction=c.deplete||c.sacrifice;
+    // For deplete devices, check if player can afford any essence cost
+    var canAfford=true;
+    if(c.deplete){
+      // Check by attempting a dry-run: each deplete fn checks internally,
+      // but we can gate on known costs. Hourglass costs 2, others are free.
+      var deplCost = (c.id==='dimensional_hourglass') ? 2 : 0;
+      canAfford = (gs[p].essPool >= deplCost);
+    }
+
+    var canAct=isActive&&gs.phase==='main'&&!dd.depleted&&hasAction&&canAfford;
+    var cantAfford=isActive&&gs.phase==='main'&&!dd.depleted&&hasAction&&!canAfford;
+    var isSelDev=(selectedDevice===p+':'+id);
+
+    var el=document.createElement('div');
+    el.className='card bf f-device'
+      +(canAct?' clickable':'')
+      +(dd.depleted?' unplayable':'')
+      +(cantAfford?' unplayable':'')
+      +(isSelDev?' selected-minion':'');
+    el.innerHTML=buildCardHTML(c);
+
+    if(canAct){
+      el.addEventListener('click',function(e){
+        e.stopPropagation();
+        selectedDevice=(isSelDev?null:p+':'+id);
+        selectedMinion=null;
+        renderBF(gs,'p1');renderBF(gs,'p2');
+        renderActionPanel(gs);
+      });
+    }
+
+    ct.appendChild(el);
+  });
+}
+
+function renderHand(gs){
+  var ct=document.getElementById('hand-cards');
+  ct.innerHTML='';
+  var p=gs.active,ps=gs[p];
+  ps.hand.forEach(function(id,i){
+    var c=C(id);if(!c)return;
+    var playable=canPlay(gs,p,c);
+    var essG=essMode&&c.type!=='Device'&&c.type!=='Forbidden Action'&&!ps.essCardPlayed;
+    var el=document.createElement('div');
+    el.className='card f-'+c.faction
+      +(playable||essG?' clickable':'')
+      +((!playable&&!essG)?' unplayable':'')
+      +(essG?' ess-glow':'');
+    el.innerHTML=buildCardHTML(c);
+
+    // Tap to play
+    if(playable||essG){
+      (function(idx){
+        el.addEventListener('click',function(e){
+          if(e._fromZoom)return;
+          playCard(gs,p,idx);
+        });
+      })(i);
+    }
+
+    // Long-press or hold to zoom
+    var zoomTimer;
+    el.addEventListener('touchstart',function(e){
+      zoomTimer=setTimeout(function(){openZoom(c,null);},400);
+    },{passive:true});
+    el.addEventListener('touchend',function(){clearTimeout(zoomTimer);});
+    el.addEventListener('touchmove',function(){clearTimeout(zoomTimer);});
+    // Right-click / long hover on desktop
+    el.addEventListener('contextmenu',function(e){e.preventDefault();openZoom(c,null);});
+
+    ct.appendChild(el);
+  });
+}
+
+function canPlay(gs,p,c){
+  if(gs.phase!=='main')return false;
+  if(essMode)return c.type!=='Device'&&c.type!=='Forbidden Action'&&!gs[p].essCardPlayed;
+  if(c.type==='Forbidden Action')return gs[p].sanity>=(c.sanityCost||0);
+  return gs[p].essPool>=(c.cost||0);
+}
+
+function refreshBtns(){
+  var p=GS.active,inMain=GS.phase==='main';
+  document.getElementById('btn-end').disabled=!inMain;
+  document.getElementById('btn-ess').disabled=!inMain||GS[p].essCardPlayed;
+  document.getElementById('btn-ess').textContent=essMode?'CANCEL':'ESSENCE';
+  document.getElementById('btn-ess').className='btn '+(essMode?'btn-gold':'btn-essence');
+  document.getElementById('p1-status').textContent=
+    essMode?'Tap a hand card to play as Essence.':'Tap cards to play. Hold to read.';
+}
+
+// ── CARD HTML ─────────────────────────────────────────────────────────────────
+function buildCardHTML(c, lifeOverride){
+  var isForbidden = c.type === 'Forbidden Action';
+  var cost = isForbidden ? c.sanityCost : c.cost;
+  var pipClass = isForbidden ? 'pip-sanity' : (cost === 0 ? 'pip-free' : 'pip-essence');
+  var pipLabel = isForbidden ? ('🜁' + (cost||0)) : (cost||0);
+  var lifeVal = (lifeOverride !== undefined && lifeOverride !== null) ? lifeOverride : c.life;
+  var iconSrc = FACTION_ICONS[c.faction] || '';
+  var artSrc  = CARD_ART[c.id] || '';
+
+  // TOP BAR: cost pip + name
+  var html = '<div class="card-top-bar">'
+    + '<div class="card-cost-pip ' + pipClass + '">' + pipLabel + '</div>'
+    + '<div class="card-name">' + c.name + '</div>'
+    + '</div>';
+
+  // META ROW: faction icon + type + life
+  html += '<div class="card-meta-row">'
+    + (iconSrc ? '<img class="card-faction-icon" src="' + iconSrc + '" alt="' + c.faction + '">' : '<span style="width:16px"></span>')
+    + '<div class="card-meta-right">'
+    + '<span class="card-type">' + c.type + '</span>'
+    + (lifeVal != null ? '<span class="card-life">' + lifeVal + '</span>' : '')
+    + '</div>'
+    + '</div>';
+
+  // ART ZONE
+  html += '<div class="card-art">';
+  if(artSrc){
+    html += '<img src="' + artSrc + '" alt="">';
+  } else {
+    // Placeholder: faction icon at low opacity
+    html += '<div class="card-art-placeholder">'
+      + (iconSrc ? '<img src="' + iconSrc + '" alt="">' : '')
+      + '</div>';
+  }
+  html += '</div>';
+
+  // TEXT BOX
+  html += '<div class="card-text-box">'
+    + '<div class="card-rules">' + (c.rulesText || '') + '</div>'
+    + '</div>';
+
+  return html;
+}
+
+// ── ACTION PANEL ──────────────────────────────────────────────────────────────
+function renderActionPanel(gs){
+  gs=gs||GS;
+  var panel=document.getElementById('action-panel');
+  var menuBtn=document.getElementById('btn-menu');
+  panel.innerHTML='';
+
+  if(selectedMinion){
+    var parts=selectedMinion.split(':');
+    var p=parts[0],id=parts[1];
+    var c=C(id);
+    if(!c){clearSelection();return;}
+
+    var name=document.createElement('div');
+    name.className='action-card-name';
+    name.innerHTML='<em>'+c.name+'</em>';
+    panel.appendChild(name);
+
+    var actBtn=document.createElement('button');
+    actBtn.className='btn btn-action';
+    actBtn.textContent='SACRIFICE +1 ⚗';
+    actBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      clearSelection();
+      sacrificeMinion(gs,p,id,true);
+      renderAll();refreshBtns();
+    });
+    panel.appendChild(actBtn);
+
+    var dismiss=document.createElement('button');
+    dismiss.className='btn btn-dismiss';
+    dismiss.textContent='✕';
+    dismiss.addEventListener('click',function(e){e.stopPropagation();clearSelection();});
+    panel.appendChild(dismiss);
+    menuBtn.style.display='none';
+
+  } else if(selectedDevice){
+    var parts=selectedDevice.split(':');
+    var p=parts[0],id=parts[1];
+    var c=C(id);
+    if(!c){clearSelection();return;}
+
+    var name=document.createElement('div');
+    name.className='action-card-name';
+    name.innerHTML='<em>'+c.name+'</em>';
+    panel.appendChild(name);
+
+    var actionLabel=c.sacrifice?'SACRIFICE':'ACTIVATE';
+    var actBtn=document.createElement('button');
+    actBtn.className='btn btn-action btn-action-dev';
+    actBtn.textContent=actionLabel;
+    actBtn.addEventListener('click',function(e){
+      e.stopPropagation();
+      clearSelection();
+      activateDevice(gs,p,id);
+    });
+    panel.appendChild(actBtn);
+
+    var dismiss=document.createElement('button');
+    dismiss.className='btn btn-dismiss';
+    dismiss.textContent='✕';
+    dismiss.addEventListener('click',function(e){e.stopPropagation();clearSelection();});
+    panel.appendChild(dismiss);
+    menuBtn.style.display='none';
+
+  } else {
+    // Nothing selected — show menu button only
+    menuBtn.style.display='';
+  }
+}
+
+function clearSelection(){
+  selectedMinion=null;
+  selectedDevice=null;
+  if(GS){renderBF(GS,'p1');renderBF(GS,'p2');}
+  renderActionPanel(GS);
+}
+
+function openGameMenu(){
+  // reserved for future menu
+}
+
+function closeGameMenu(){
+  // reserved for future menu
+}
+
+
+function log(msg,type){
+  type=type||'sys';
+  var ct=document.getElementById('log');
+  var el=document.createElement('div');
+  el.className='log-entry log-'+type;
+  el.textContent=msg;
+  ct.appendChild(el);
+  ct.scrollTop=ct.scrollHeight;
+  // Update the collapsed latest-line preview
+  document.getElementById('log-latest').textContent=msg;
+}
+
+function toggleLog(){
+  document.getElementById('log-bar').classList.toggle('expanded');
+}
+
+function openZoom(c, lifeOverride){
+  var zc = document.getElementById('zoom-card');
+  // Render a full-size card inside the zoom container
+  zc.innerHTML = '<div class="card f-' + c.faction + '" style="width:100%;height:100%;border-radius:10px;">'
+    + buildCardHTML(c, lifeOverride)
+    + '</div>'
+    + '<div class="zoom-hint">Tap anywhere to close</div>';
+  document.getElementById('zoom-overlay').classList.add('open');
+}
+
+function closeZoom(){
+  document.getElementById('zoom-overlay').classList.remove('open');
+}
+
+// ── BOOT ──────────────────────────────────────────────────────────────────────
+initGame();
+</script>
+</body>
+</html>
